@@ -28,7 +28,7 @@ export type CourseXMLType = {
   "@_misc4": string;
 };
 
-// json 파일 저장용 타입
+// json 파일 저장용 타입(에브리타임 크롤링 시 만들어진 파일 내의 타입)
 export type CourseFileType = {
   timeplace?: TimePlaceFileType[];
   id: string;
@@ -49,6 +49,11 @@ export type CourseFileType = {
   misc2: string;
   misc3: string;
   misc4: string;
+};
+
+// 파일 내에서 강의 계획서 코드를 추가한 타입(종정시 크롤링 이후)
+export type CourseFileTypeWithPlanCodeType = CourseFileType & {
+  plan_code: string;
 };
 
 // 실제 db에 보낼 타입

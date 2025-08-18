@@ -1,11 +1,14 @@
-import { CourseDBType, CourseFileType } from "../type/course.type";
-import parseDayOrNight from "../utils/parseDayOrNight";
-import parseOfflineSchedules from "../utils/parseOfflineSchedules";
+import {
+  CourseDBType,
+  CourseFileTypeWithPlanCodeType,
+} from "../../type/course.type";
+import parseDayOrNight from "../../utils/parseDayOrNight";
+import parseOfflineSchedules from "../../utils/parseOfflineSchedules";
 
 export default async function postCourses(
   semester_id: string,
   major_code: string,
-  courses: CourseFileType[]
+  courses: CourseFileTypeWithPlanCodeType[]
 ) {
   const courseData: CourseDBType[] = courses.map((course) => {
     const offline_schedules = course.timeplace
@@ -42,6 +45,7 @@ export default async function postCourses(
       grade,
       grade_limit,
       online_hour: online,
+      plan_code: course.plan_code,
       offline_schedules,
     };
   });

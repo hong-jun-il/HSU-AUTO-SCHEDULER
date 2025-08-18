@@ -1,9 +1,9 @@
 import { Page } from "@playwright/test";
-import parseCoursesFromXML from "../utils/parseXML/parseCoursesFromXML";
-import { CourseFileType } from "../type/course.type";
-import { randomDelay } from "../utils/randomDelay";
+import parseCoursesFromXML from "../../utils/parseXML/parseCoursesFromXML";
+import { CourseFileType } from "../../type/course.type";
+import { randomDelay } from "../../utils/randomDelay";
 
-export async function getCourses(
+export async function getEveryTimeCourses(
   page: Page,
   semester: string,
   major_id: string,
@@ -42,7 +42,12 @@ export async function accumulateCourses(
   let allCourses: CourseFileType[] = [];
 
   while (1) {
-    const XMLCourses = await getCourses(page, semester, major_id, pageIndex);
+    const XMLCourses = await getEveryTimeCourses(
+      page,
+      semester,
+      major_id,
+      pageIndex
+    );
     const coursesInCurPage = parseCoursesFromXML(XMLCourses);
 
     allCourses.push(...coursesInCurPage);

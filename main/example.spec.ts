@@ -1,15 +1,21 @@
 import { test } from "@playwright/test";
 import mkdirSemester from "../utils/mkdirSemester";
-import getMajors from "../api/getMajors";
+import getMajors from "../api/everytime/getMajors";
 import parseMajorsFromXML from "../utils/parseXML/parseMajorsFromXML";
 import saveMajorsToJson from "../utils/saveJson/saveMajorsToJson";
 import { MajorFileType } from "../type/major.type";
-import { accumulateCourses } from "../api/getCourses";
+import { accumulateCourses } from "../api/everytime/getEveryTimeCourses";
 import { CourseFileType } from "../type/course.type";
 import saveCoursesToJson from "../utils/saveJson/saveCoursesToJson";
-import { TARGET_SEMESTER } from "../targetSemeter";
+import { TARGET_SEMESTER } from "../constants/TARGET_SEMESTER";
+import readMajorFile from "../utils/readMajorFile";
+import getHSUINFOCourses from "../api/hsu_info/getHSUINFOCourses";
+import parseHSUInfoCoursesFromXML from "../utils/parseXML/parseHSUInfoCoursesFromXML";
+import savePlanCodeInJson from "../utils/saveJson/savePlanCodeInJson";
+import { HSUCourseType } from "../type/HSUInfo/HSUInfoCourseType";
 
 const TEST_FUNC_TIME_OUT = 1000 * 60 * 60;
+const semester = TARGET_SEMESTER;
 
 test.use({
   locale: "ko-KR",
@@ -23,12 +29,12 @@ test.use({
   },
 });
 
-test("전공 및 강의 긁어오기", async ({ page, context }) => {
+test("에브리타임: 전공 및 강의 긁어오기", async ({ page, context }) => {
   // 테스트 함수 타임아웃 1시간으로 정의
   test.setTimeout(TEST_FUNC_TIME_OUT);
 
   // 학기 폴더 생성
-  await mkdirSemester(TARGET_SEMESTER);
+  await mkdirSemester(semester);
 
   await context.addCookies([
     {
@@ -45,12 +51,9 @@ test("전공 및 강의 긁어오기", async ({ page, context }) => {
 
   await page.waitForTimeout(1000);
 
-  const XMLMajors = await getMajors(page, TARGET_SEMESTER);
+  const XMLMajors = await getMajors(page, semester);
   const fileMajors: MajorFileType[] = parseMajorsFromXML(XMLMajors);
-  const isSuccessSaveMajors = await saveMajorsToJson(
-    TARGET_SEMESTER,
-    fileMajors
-  );
+  const isSuccessSaveMajors = await saveMajorsToJson(semester, fileMajors);
 
   if (!isSuccessSaveMajors) {
     return;
@@ -64,12 +67,12 @@ test("전공 및 강의 긁어오기", async ({ page, context }) => {
 
     const fileCourses: CourseFileType[] = await accumulateCourses(
       page,
-      TARGET_SEMESTER,
+      semester,
       major_id
     );
 
     const isSuccessSaveCourses = await saveCoursesToJson(
-      TARGET_SEMESTER,
+      semester,
       major_id,
       fileCourses
     );
@@ -84,5 +87,28 @@ test("전공 및 강의 긁어오기", async ({ page, context }) => {
     );
 
     await page.waitForTimeout(Math.random() * (5000 - 2000) + 2000);
+  }
+});
+
+test("종정시: 수업계획서 코드 긁어오기", async ({ page }) => {
+  await page.goto("https://info.hansung.ac.kr/jsp/haksa/siganpyo_aui.jsp");
+
+  const majors = await readMajorFile(semester);
+
+  for (const major of majors) {
+    const major_id = major.id;
+    const major_code = major.major_code;
+    const major_name = major.major_name;
+    const order = major.order;
+
+    const XMLCourses = await getHSUINFOCourses(page, semester, major_code);
+    const courses: HSUCourseType[] = parseHSUInfoCoursesFromXML(XMLCourses);
+    savePlanCodeInJson(semester, major_id, courses);
+
+    console.log(
+      `${order}/${
+        majors.length - 1
+      }: ${major_id} - ${major_name}(${major_code}) 파일 덮어쓰기 성공`
+    );
   }
 });

@@ -1,4 +1,4 @@
-import { SemesterType } from "../type/semester.type";
+import { SemesterType } from "../../type/semester.type";
 
 export async function postSemester(semester: string) {
   const [year, term] = semester.split("-");

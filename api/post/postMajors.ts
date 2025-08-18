@@ -1,4 +1,4 @@
-import { MajorDBType, MajorFileType } from "../type/major.type";
+import { MajorDBType, MajorFileType } from "../../type/major.type";
 
 export async function postMajors(semester_id: string, majors: MajorFileType[]) {
   const majorData: MajorDBType[] = majors.map((major) => ({

@@ -1,11 +1,11 @@
 import fs from "fs/promises";
 import path from "path";
-import { TARGET_SEMESTER } from "./targetSemeter";
+import { TARGET_SEMESTER } from "./constants/TARGET_SEMESTER";
 import { MajorFileType } from "./type/major.type";
-import { CourseFileType } from "./type/course.type";
-import { postSemester } from "./api/postSemester";
-import { postMajors } from "./api/postMajors";
-import postCourses from "./api/postCourses";
+import { CourseFileTypeWithPlanCodeType } from "./type/course.type";
+import { postSemester } from "./api/post/postSemester";
+import { postMajors } from "./api/post/postMajors";
+import postCourses from "./api/post/postCourses";
 
 const semester_id = TARGET_SEMESTER;
 
@@ -29,7 +29,7 @@ async function sendToBackend() {
       process.cwd(),
       `${TARGET_SEMESTER}/courses/`
     );
-    const courses: CourseFileType[] = JSON.parse(
+    const courses: CourseFileTypeWithPlanCodeType[] = JSON.parse(
       await fs.readFile(`${courseDir}/${major_id}.json`, "utf-8")
     );
 
