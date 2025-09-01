@@ -24,9 +24,14 @@ export default async function savePlanCodeInJson(
     const target_course = file_courses.find((tc) => tc.code === code);
 
     if (!target_course) {
-      throw new Error(
-        `${semester}학기 ${course.kwamokname} (${code})를 파일 내에서 찾지 못함!`
+      console.warn(
+        `${semester}학기 ${major_id} ${course.kwamokname} (${code})를 파일 내에서 찾지 못함!`
       );
+      continue;
+
+      //   throw new Error(
+      //     `${semester}학기 ${major_id} ${course.kwamokname} (${code})를 파일 내에서 찾지 못함!`
+      //   );
     }
 
     const newCourseData = {
@@ -37,11 +42,11 @@ export default async function savePlanCodeInJson(
     added_plan_code_courses.push(newCourseData);
   }
 
-  if (added_plan_code_courses.length !== file_courses.length) {
-    throw new Error(
-      `${semester}학기 ${major_id}의 파일 내 강의 개수와 새로 만들어질 강의 개수가 다름!`
-    );
-  }
+  //   if (added_plan_code_courses.length !== file_courses.length) {
+  //     throw new Error(
+  //       `${semester}학기 ${major_id}의 파일 내 강의 개수와 새로 만들어질 강의 개수가 다름!`
+  //     );
+  //   }
 
   try {
     await fs.writeFile(
