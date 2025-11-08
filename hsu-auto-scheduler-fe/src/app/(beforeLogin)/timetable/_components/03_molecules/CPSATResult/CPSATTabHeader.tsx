@@ -1,8 +1,11 @@
 "use client";
 
 import CloseIcon from "@/assets/icons/CloseIcon";
+import useCurrentSemester from "@/hooks/common/useCurrentSemester";
 import { useCPSATResultStore } from "@/store/CPSATResult/CPSATResultStore";
+import { useTimetableStore } from "@/store/timetable/timetableStore";
 import { CPSATSolutionType } from "@/types/CPSATSolution.type";
+import getTimeIndex from "@/utils/getTimeIndex";
 import clsx from "clsx";
 import { useShallow } from "zustand/shallow";
 
@@ -17,6 +20,24 @@ export default function CPSATTabHeader({
   totalSolutionCount,
   CPSATResult,
 }: Props) {
+  const currentSemester = useCurrentSemester();
+
+  const {
+    addCourse,
+    resetSelectedCourses,
+    personalSchedules,
+    addTimeRange,
+    resetTimeSelection,
+  } = useTimetableStore(
+    useShallow((state) => ({
+      addCourse: state.addCourse,
+      resetSelectedCourses: state.resetSelectedCourses,
+      personalSchedules: state.personalSchedules,
+      addTimeRange: state.addTimeRange,
+      resetTimeSelection: state.resetTimeSelection,
+    })),
+  );
+
   const { setCPSATResultModalClose } = useCPSATResultStore(
     useShallow((state) => ({
       setCPSATResultModalClose: state.setCPSATResultModalClose,
@@ -32,7 +53,36 @@ export default function CPSATTabHeader({
       return;
     }
 
-    
+    resetTimeSelection(currentSemester);
+    resetSelectedCourses(currentSemester);
+
+    const CPSATResultCourses = CPSATResult[currentIndex].selected_courses;
+
+    CPSATResultCourses.forEach((course) => {
+      addCourse(currentSemester, course);
+
+      const offlineSchedules = course.offline_schedules;
+
+      offlineSchedules.forEach((os) => {
+        const startTimeIndex = getTimeIndex(os.start_time);
+        const endTimeIndex = getTimeIndex(os.end_time);
+
+        addTimeRange(currentSemester, os.day, startTimeIndex, endTimeIndex);
+      });
+    });
+
+    personalSchedules[currentSemester].forEach((ps) => {
+      const offlineSchedules = ps.offline_schedules;
+
+      offlineSchedules.forEach((os) => {
+        const startTimeIndex = getTimeIndex(os.start_time);
+        const endTimeIndex = getTimeIndex(os.end_time);
+
+        addTimeRange(currentSemester, os.day, startTimeIndex, endTimeIndex);
+      });
+    });
+
+    setCPSATResultModalClose();
   };
 
   return (

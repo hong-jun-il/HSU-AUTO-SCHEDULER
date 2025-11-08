@@ -52,12 +52,14 @@ export default function OnlineCourseList({
             <span className="max-lg:text-xxl pt-1 text-xs max-md:text-[.8rem]">
               {onlineCourse.professors.join(", ")}
             </span>
-            <button
-              className="aspect-square w-7 bg-transparent pt-[3px] max-md:w-5"
-              onClick={() => handleDeleteOnlineCourse(onlineCourse)}
-            >
-              <CloseIcon />
-            </button>
+            {!isCPSATResult && (
+              <button
+                className="aspect-square w-7 bg-transparent pt-[3px] max-md:w-5"
+                onClick={() => handleDeleteOnlineCourse(onlineCourse)}
+              >
+                <CloseIcon />
+              </button>
+            )}
           </div>
         </div>
       ))}

@@ -3,13 +3,16 @@ import RQProvider from "@/components/RQProvider";
 import RHFProvider from "@/components/RHFProvider";
 import ResponsiveProvider from "@/components/ResponsiveProvider";
 import Head from "@/components/SEO/Head";
+import { headers } from "next/headers";
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  const header = await headers();
+  const userAgent = header.get("user-agent") || "";
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(userAgent);
 
   return (
     <html lang="ko">
