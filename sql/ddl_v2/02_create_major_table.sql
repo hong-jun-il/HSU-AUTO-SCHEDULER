@@ -1,0 +1,6 @@
+CREATE TABLE major (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    code VARCHAR(20) NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    CONSTRAINT uk_major_code UNIQUE(code)
+);
