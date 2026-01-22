@@ -1,11 +1,11 @@
-export type HSUCourseType = {
+export type HSUInfoXMLCourseType = {
   kwamokcode: string;
   kwamokname: string;
   isugubun: string;
   hakjum: number;
   juya: string;
   bunban: string;
-  haknean: number;
+  haknean: string;
   haknean_limit: number;
   prof: string;
   classroom: string;

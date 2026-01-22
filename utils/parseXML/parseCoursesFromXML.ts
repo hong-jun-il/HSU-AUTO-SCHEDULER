@@ -1,5 +1,5 @@
 import { XMLParser } from "fast-xml-parser";
-import { CourseFileType, CourseXMLType } from "../../type/course.type";
+import { CourseXMLType, EverytimeCourseType } from "../../type/course.type";
 import { TimePlaceFileType } from "../../type/timeplace.type";
 
 export default function parseCoursesFromXML(XMLCourses: string) {
@@ -14,7 +14,7 @@ export default function parseCoursesFromXML(XMLCourses: string) {
     ? rawSubject
     : [rawSubject];
 
-  const courses: CourseFileType[] = subjects.map((course) => {
+  const courses: EverytimeCourseType[] = subjects.map((course) => {
     const timeplaces: TimePlaceFileType[] | undefined = course.timeplace
       ? (Array.isArray(course.timeplace)
           ? course.timeplace

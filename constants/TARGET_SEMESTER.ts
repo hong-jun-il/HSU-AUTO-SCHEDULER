@@ -1,1 +1,1 @@
-export const TARGET_SEMESTER = "2025-1";
+export const TARGET_SEMESTER = "2026-1";

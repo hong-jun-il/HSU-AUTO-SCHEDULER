@@ -5,14 +5,14 @@ import parseMajorsFromXML from "../utils/parseXML/parseMajorsFromXML";
 import saveMajorsToJson from "../utils/saveJson/saveMajorsToJson";
 import { MajorFileType } from "../type/major.type";
 import { accumulateCourses } from "../api/everytime/getEveryTimeCourses";
-import { CourseFileType } from "../type/course.type";
 import saveCoursesToJson from "../utils/saveJson/saveCoursesToJson";
 import { TARGET_SEMESTER } from "../constants/TARGET_SEMESTER";
 import readMajorFile from "../utils/readMajorFile";
 import getHSUINFOCourses from "../api/hsu_info/getHSUINFOCourses";
 import parseHSUInfoCoursesFromXML from "../utils/parseXML/parseHSUInfoCoursesFromXML";
-import savePlanCodeInJson from "../utils/saveJson/savePlanCodeInJson";
-import { HSUCourseType } from "../type/HSUInfo/HSUInfoCourseType";
+import { EverytimeCourseType } from "../type/course.type";
+import { HSUInfoXMLCourseType } from "../type/HSUInfo/HSUInfoXMLCourse.type";
+import overrideCourseFile from "../utils/saveJson/overrideCourseFile";
 
 const TEST_FUNC_TIME_OUT = 1000 * 60 * 60;
 const semester = TARGET_SEMESTER;
@@ -40,7 +40,7 @@ test("에브리타임: 전공 및 강의 긁어오기", async ({ page, context }
     {
       name: "etsid",
       value:
-        "s%3AyPXUF0aQh7Xh7eDgWYPf_GiVpylkKqt3.H5OOiQavQm%2FmQP45zHo4ycD9QTw2V65WSjb41oLCa5w",
+        "s%3A_9Vg6omAlTWKfgETULCabDehw7b-CcyC.jwR9eAvDCPr6aUdBPcJQHHBaI%2FGrvDa8v70Liorf5YA",
       domain: ".everytime.kr",
       path: "/",
       httpOnly: true,
@@ -65,16 +65,16 @@ test("에브리타임: 전공 및 강의 긁어오기", async ({ page, context }
     const major_id = major.id;
     const major_name = major.major_name;
 
-    const fileCourses: CourseFileType[] = await accumulateCourses(
+    const fileCourses: EverytimeCourseType[] = await accumulateCourses(
       page,
       semester,
-      major_id
+      major_id,
     );
 
     const isSuccessSaveCourses = await saveCoursesToJson(
       semester,
       major_id,
-      fileCourses
+      fileCourses,
     );
 
     if (!isSuccessSaveCourses) {
@@ -83,7 +83,7 @@ test("에브리타임: 전공 및 강의 긁어오기", async ({ page, context }
     console.log(
       `${major.order}/${fileMajors.length - 1} ${major_name}: ${
         fileCourses.length
-      }개 강의 저장 성공`
+      }개 강의 저장 성공`,
     );
 
     await page.waitForTimeout(Math.random() * (5000 - 2000) + 2000);
@@ -102,13 +102,15 @@ test("종정시: 수업계획서 코드 긁어오기", async ({ page }) => {
     const order = major.order;
 
     const XMLCourses = await getHSUINFOCourses(page, semester, major_code);
-    const courses: HSUCourseType[] = parseHSUInfoCoursesFromXML(XMLCourses);
-    savePlanCodeInJson(semester, major_id, courses);
+    const courses: HSUInfoXMLCourseType[] =
+      parseHSUInfoCoursesFromXML(XMLCourses);
+
+    overrideCourseFile(semester, major_id, courses);
 
     console.log(
       `${order}/${
         majors.length - 1
-      }: ${major_id} - ${major_name}(${major_code}) 파일 덮어쓰기 성공`
+      }: ${major_id} - ${major_name}(${major_code}) 파일 덮어쓰기 성공`,
     );
   }
 });

@@ -1,13 +1,13 @@
 import { Page } from "@playwright/test";
 import parseCoursesFromXML from "../../utils/parseXML/parseCoursesFromXML";
-import { CourseFileType } from "../../type/course.type";
 import { randomDelay } from "../../utils/randomDelay";
+import { EverytimeCourseType } from "../../type/course.type";
 
 export async function getEveryTimeCourses(
   page: Page,
   semester: string,
   major_id: string,
-  pageIndex: number
+  pageIndex: number,
 ) {
   const [year, term] = semester.split("-");
 
@@ -23,7 +23,7 @@ export async function getEveryTimeCourses(
       data: `categoryId=${major_id}&campusId=195&year=${year}&semester=${term}&limitNum=50&startNum=${
         pageIndex * 50
       }`,
-    }
+    },
   );
 
   if (!res.ok) {
@@ -36,17 +36,17 @@ export async function getEveryTimeCourses(
 export async function accumulateCourses(
   page: Page,
   semester: string,
-  major_id: string
+  major_id: string,
 ) {
   let pageIndex = 0;
-  let allCourses: CourseFileType[] = [];
+  let allCourses: EverytimeCourseType[] = [];
 
   while (1) {
     const XMLCourses = await getEveryTimeCourses(
       page,
       semester,
       major_id,
-      pageIndex
+      pageIndex,
     );
     const coursesInCurPage = parseCoursesFromXML(XMLCourses);
 

@@ -3,7 +3,7 @@ import { Page } from "@playwright/test";
 export default async function getHSUINFOCourses(
   page: Page,
   semester: string,
-  major_code: string
+  major_code: string,
 ) {
   const [year, term] = semester.split("-");
 
@@ -18,7 +18,7 @@ export default async function getHSUINFOCourses(
         Referer: "https://info.hansung.ac.kr/jsp/haksa/siganpyo_aui.jsp",
       },
       data: `gubun=history&syearhakgi=${year}${term}&sjungong=${major_code}`,
-    }
+    },
   );
 
   if (!res.ok) {

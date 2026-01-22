@@ -1,7 +1,7 @@
 {
   "description": "",
   "scripts": {
-    "send": "ts-node sendToBackend.ts"
+    "send": "ts-node -r dotenv/config sendToBackend.ts"
   },
   "dependencies": {
     "dotenv": "^17.2.1",

@@ -1,4 +1,4 @@
-import { WeekdayEnum } from "./weekday.enum";
+import { WeekdayEnum } from "./enums/weekday.enum";
 
 export type TimePlaceXMLType = {
   "@_day": string;
@@ -15,7 +15,6 @@ export type TimePlaceFileType = {
 };
 
 export type TimePlaceDBType = {
-  offline_schedule_id: string;
   day: WeekdayEnum;
   start_time: number;
   end_time: number;

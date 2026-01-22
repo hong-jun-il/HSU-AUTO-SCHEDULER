@@ -1,11 +1,11 @@
 import path from "path";
 import fs from "fs/promises";
-import { CourseFileType } from "../../type/course.type";
+import { EverytimeCourseType } from "../../type/course.type";
 
 export default async function saveCoursesToJson(
   semester: string,
   major_id: string,
-  fileCourses: CourseFileType[]
+  fileCourses: EverytimeCourseType[],
 ) {
   const dir = path.resolve(process.cwd(), `${semester}/courses`);
   const file = path.join(dir, `${major_id}.json`);

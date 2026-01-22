@@ -1,4 +1,6 @@
-import { DayOrNightEnum } from "./dayOrNight.enum";
+import { DayOrNightEnum } from "./enums/day_or_night.enum";
+import { DeliveryMethodEnum } from "./enums/delivery_method.enum";
+import { RequirementTypeEnum } from "./enums/requirement_type.enum";
 import {
   TimePlaceDBType,
   TimePlaceFileType,
@@ -29,7 +31,7 @@ export type CourseXMLType = {
 };
 
 // json 파일 저장용 타입(에브리타임 크롤링 시 만들어진 파일 내의 타입)
-export type CourseFileType = {
+export type EverytimeCourseType = {
   timeplace?: TimePlaceFileType[];
   id: string;
   code: string;
@@ -51,25 +53,27 @@ export type CourseFileType = {
   misc4: string;
 };
 
-// 파일 내에서 강의 계획서 코드를 추가한 타입(종정시 크롤링 이후)
-export type CourseFileTypeWithPlanCodeType = CourseFileType & {
-  plan_code: string;
+// 종정시 크롤링 아후 학년, 이수 구분, 강의 계획서를 덮어쓴 타입
+export type OverridedCourseType = Omit<EverytimeCourseType, "grade"> & {
+  grade: number;
+  remark: string | null;
+  plan_code: string | null;
 };
 
 // 실제 db에 보낼 타입
 export type CourseDBType = {
-  semester_id: string; // 학기 아이디: string
-  course_code: string; // 강의코드: string
-  course_name: string; // 강의명: string
-  professor_names: string; // 교수 이름: string 배열
-  completion_type: string; // 이수 구분(전필, 전선, 복전선, 일선): string
-  delivery_method: string; // 강의 구분(온라인100%, BL, 대면수업): string
-  credit: number; // 학점: number
-  day_or_night: DayOrNightEnum; // 주야구분: enum
-  class_section: string; // 분반: string
-  grade: string; // 학년(1, 2, 3, 4학년 또는 전학년(0으로)): string
-  grade_limit: number | null; // 학년 제한: number 또는 null
-  online_hour: number; // 온라인 시간: number
-  offline_schedules: TimePlaceDBType[]; // 오프라인 스케줄
-  // plan_code: string; // 강의 계획서 code string 또는 null
+  code: string;
+  name: string;
+  credit: number;
+  requirement_type: RequirementTypeEnum;
+  grade: number;
+  grade_limit: number | null;
+  section: string;
+  delivery_method: DeliveryMethodEnum;
+  day_or_night: DayOrNightEnum;
+  professors: string;
+  online_hour: number;
+  plan_code: string | null;
+  remark: string | null;
+  offline_schedules: TimePlaceDBType[];
 };

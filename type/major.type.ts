@@ -15,6 +15,6 @@ export type MajorFileType = {
 
 // 실제 db에 보낼 타입
 export type MajorDBType = {
-  major_code: string;
-  major_name: string;
+  code: string;
+  name: string;
 };
