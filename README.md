@@ -3,7 +3,7 @@
 사용자의 제약 조건을 기반으로,
 최적의 대학 시간표 조합을 추천하는 웹 서비스입니다.
 
-<img width="1596" height="734" alt="image" src="https://github.com/user-attachments/assets/9d039f58-4bd4-42ab-8d99-fa9c45a10cf3" />
+<img width="1594" height="766" alt="image" src="https://github.com/user-attachments/assets/52b62b94-ba93-4768-8082-f32f840afeb3" />
 <img width="1600" height="730" alt="image" src="https://github.com/user-attachments/assets/012bd2b3-1f8c-491a-bb39-6d0114932236" />
 
 ## 🛠 Tech Stack
