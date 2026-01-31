@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CrawlerController } from '../crawler.controller';
-import { TransactionService } from '../services/transaction.service';
+import { TransactionService } from '../services/crawler.service';
 import { PersistenceService } from '../services/persistence.service';
 
 describe('CrawlerController', () => {

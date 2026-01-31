@@ -1,155 +1,151 @@
 import { Injectable } from '@nestjs/common';
-import { MajorDto } from 'src/common/dto/02_major.dto';
 import { SemesterEntity } from 'src/common/entities/01_semester.entity';
 import { MajorEntity } from 'src/common/entities/02_major.entity';
-import { SemesterMajorEntity } from 'src/common/entities/03_semester_major.entity';
 import { CourseEntity } from 'src/common/entities/04_course.entity';
-import { OfflineScheduleEntity } from 'src/common/entities/06_offlineSchedule.entity';
-import { MajorCourseEntity } from 'src/common/entities/07_major_course.entity';
-import { QueryRunner } from 'typeorm';
-import { CrawledCourseDto } from '../dto/crawledCourse.dto';
-import { ClassSectionEntity } from 'src/common/entities/05_classSection.entity';
-import { OfflineScheduleDto } from 'src/common/dto/04_offline_schedule.dto';
-import { v7 as uuidv7 } from 'uuid';
+import { OfflineScheduleEntity } from 'src/common/entities/07_offlineSchedule.entity';
+import { In, QueryRunner } from 'typeorm';
+import { MajorCourseEntity } from 'src/common/entities/05_major_course.entity';
+import { LectureEntity } from 'src/common/entities/06_lecture.entity';
+import { CourseDto } from 'src/common/dto/course.dto';
+import { LoggerService } from 'src/modules/logger/logger.service';
 
 @Injectable()
 export class PersistenceService {
-  // major table 저장 메서드
-  async insertIntoMajorTable(
-    queryRunner: QueryRunner,
-    major: MajorDto,
-  ): Promise<MajorEntity> {
-    const majorEntity = queryRunner.manager.create(MajorEntity, {
-      major_code: major.major_code,
-      major_name: major.major_name,
-    });
-
-    await queryRunner.manager.save(majorEntity);
-
-    return majorEntity;
-  }
-
-  // semester-major table 저장 메서드
-  async insertIntoSemesterMajorTable(
-    queryRunner: QueryRunner,
-    semesterEntity: SemesterEntity,
-    majorEntity: MajorEntity,
-  ) {
-    const semesterMajorEntity = queryRunner.manager.create(
-      SemesterMajorEntity,
-      {
-        semester_id: semesterEntity.semester_id,
-        major_code: majorEntity.major_code,
-        semester: semesterEntity,
-        major: majorEntity,
-      },
-    );
-
-    await queryRunner.manager.save(semesterMajorEntity);
-
-    return semesterMajorEntity;
-  }
+  constructor(private readonly logger: LoggerService) {}
 
   // course table 저장 메서드
-  async insertIntoCourseTable(
+  async bulkUpsertCourses(
     queryRunner: QueryRunner,
-    course: CrawledCourseDto,
-    semesterEntity: SemesterEntity,
-  ) {
-    const createdCourseEntity = queryRunner.manager.create(CourseEntity, {
-      course_code: course.course_code,
-      semester_id: course.semester_id,
-      course_name: course.course_name,
-      completion_type: course.completion_type,
+    courses: CourseDto[],
+  ): Promise<CourseEntity[]> {
+    const courseData = courses.map((course) => ({
+      code: course.code,
+      name: course.name,
       credit: course.credit,
-      grade: course.grade,
-      grade_limit: course.grade_limit,
-      semester: semesterEntity,
+    }));
+
+    await queryRunner.manager.upsert(CourseEntity, courseData, {
+      conflictPaths: ['code'],
+      skipUpdateIfNoValuesChanged: true,
     });
 
-    await queryRunner.manager.save(CourseEntity, createdCourseEntity);
-
-    return createdCourseEntity;
+    return queryRunner.manager.findBy(CourseEntity, {
+      code: In(courses.map((course) => course.code)),
+    });
   }
 
-  // class section table 저장 메서드
-  async insertIntoClassSection(
+  // major-courses table 저장 메서드
+  async bulkUpsertMajorCourse(
     queryRunner: QueryRunner,
-    course: CrawledCourseDto,
-    courseEntity: CourseEntity,
+    courses: CourseDto[],
+    majorEntity: MajorEntity,
+    courseIdMap: Map<string, string>,
   ) {
-    const createdClassSectionEntity = queryRunner.manager.create(
-      ClassSectionEntity,
-      {
-        class_section_id: uuidv7(),
-        class_section: course.class_section,
-        professor_names: course.professor_names,
-        day_or_night: course.day_or_night,
-        delivery_method: course.delivery_method,
-        online_hour: course.online_hour,
-        plan_code: course.plan_code,
-        semester_id: course.semester_id,
-        course: courseEntity,
-      },
-    );
+    const majorCourseData = courses.map((course) => {
+      const courseId = courseIdMap.get(course.code);
 
-    await queryRunner.manager.save(
-      ClassSectionEntity,
-      createdClassSectionEntity,
-    );
+      return {
+        major_id: majorEntity.id,
+        course_id: courseId,
+        requirement_type: course.requirement_type,
+        grade: course.grade,
+        grade_limit: course.grade_limit,
+      };
+    });
 
-    return createdClassSectionEntity;
+    if (majorCourseData.length === 0) {
+      return;
+    }
+
+    await queryRunner.manager.upsert(MajorCourseEntity, majorCourseData, {
+      conflictPaths: ['major_id', 'course_id'],
+      skipUpdateIfNoValuesChanged: true,
+    });
+  }
+
+  // lecture table 저장 메서드
+  async bulkInsertIntoLectureTable(
+    queryRunner: QueryRunner,
+    semesterEntity: SemesterEntity,
+    courseIdMap: Map<string, string>,
+    courses: CourseDto[],
+  ): Promise<LectureEntity[]> {
+    const lectureData = courses.map((c) => {
+      const courseId = courseIdMap.get(c.code);
+
+      return {
+        semester_id: semesterEntity.id,
+        course_id: courseId,
+        section: c.section,
+        delivery_method: c.delivery_method,
+        day_or_night: c.day_or_night,
+        professors: c.professors,
+        online_hour: c.online_hour,
+        plan_code: c.plan_code,
+        remark: c.remark,
+      };
+    });
+
+    await queryRunner.manager
+      .createQueryBuilder()
+      .insert()
+      .into(LectureEntity)
+      .values(lectureData)
+      .orIgnore()
+      .execute();
+
+    const lectureEntities = await queryRunner.manager.find(LectureEntity, {
+      where: lectureData.map((data) => ({
+        section: data.section,
+        semester_id: data.semester_id,
+        course_id: data.course_id,
+      })),
+    });
+
+    return lectureEntities;
   }
 
   // offline schedule table 저장 메서드
-  async insertIntoOfflineScheduleTable(
+  async bulkInsertIntoOfflineScheduleTable(
     queryRunner: QueryRunner,
-    offline_schedules: OfflineScheduleDto[],
-    courseEntity: CourseEntity,
-    classSectionEntity: ClassSectionEntity,
+    lectureEntities: LectureEntity[],
+    courses: CourseDto[],
+    courseIdMap: Map<string, string>,
   ) {
-    if (offline_schedules.length === 0) return;
-
-    const offlineScheduleEntites = offline_schedules.map((off_schedule) => {
-      const entity = new OfflineScheduleEntity();
-      entity.semester_id = courseEntity.semester_id;
-      entity.offline_schedule_id = off_schedule.offline_schedule_id;
-      entity.day = off_schedule.day;
-      entity.start_time = off_schedule.start_time;
-      entity.end_time = off_schedule.end_time;
-      entity.place = off_schedule.place!;
-      entity.course = courseEntity;
-      entity.class_section = classSectionEntity;
-
-      return entity;
+    const lectureIdMap = new Map<string, string>();
+    lectureEntities.forEach((l) => {
+      lectureIdMap.set(`${l.course_id}_${l.section}`, l.id);
     });
 
-    await queryRunner.manager.insert(
-      OfflineScheduleEntity,
-      offlineScheduleEntites,
-    );
+    // courses를 돌면서 code와 section으로 lecture 엔티티의 id를 알아야 함
+    // code를 통해 course의 id를 얻고 lecture에서 course id와 section이 같은 것을 통해
+    // lecture 아이디를 얻음
+    const scheduleData = courses.flatMap((course) => {
+      const courseId = courseIdMap.get(course.code);
+      // 2. 객체가 아닌 ID(string)를 가져옴
+      const targetLectureId = lectureIdMap.get(`${courseId}_${course.section}`);
 
-    return offlineScheduleEntites;
-  }
+      if (!course.offline_schedules || course.offline_schedules.length === 0) {
+        return [];
+      }
 
-  // major-course table 저장 메서드
-  async insertIntoMajorCourseTable(
-    queryRunner: QueryRunner,
-    semesterEntity: SemesterEntity,
-    majorEntity: MajorEntity,
-    courseEntity: CourseEntity,
-  ): Promise<MajorCourseEntity> {
-    const majorCourseEntity = queryRunner.manager.create(MajorCourseEntity, {
-      semester_id: semesterEntity.semester_id,
-      major_code: majorEntity.major_code,
-      course_code: courseEntity.course_code,
-      semester: semesterEntity,
-      major: majorEntity,
-      course: courseEntity,
+      return course.offline_schedules.map((schedule) => ({
+        lecture_id: targetLectureId,
+        day: schedule.day,
+        start_time: schedule.start_time,
+        end_time: schedule.end_time,
+        place: schedule.place,
+      }));
     });
 
-    await queryRunner.manager.save(MajorCourseEntity, majorCourseEntity);
-
-    return majorCourseEntity;
+    if (scheduleData.length > 0) {
+      await queryRunner.manager
+        .createQueryBuilder()
+        .insert()
+        .into(OfflineScheduleEntity)
+        .values(scheduleData)
+        .orIgnore()
+        .execute();
+    }
   }
 }

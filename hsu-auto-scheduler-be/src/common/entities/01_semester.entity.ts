@@ -1,28 +1,22 @@
-import { Column, Entity, OneToMany, PrimaryColumn } from 'typeorm';
-import { CourseEntity } from './04_course.entity';
+import { Column, Entity, OneToMany, PrimaryColumn, Unique } from 'typeorm';
+import { LectureEntity } from './06_lecture.entity';
 import { SemesterMajorEntity } from './03_semester_major.entity';
-import { MajorCourseEntity } from './07_major_course.entity';
 
 @Entity('semester')
+@Unique('uk_semester', ['year', 'term'])
 export class SemesterEntity {
-  @PrimaryColumn()
-  semester_id: string;
+  @PrimaryColumn({ type: 'varchar', length: 20 })
+  id: string;
 
-  @Column()
+  @Column({ type: 'int' })
   year: number;
 
-  @Column()
+  @Column({ type: 'tinyint' })
   term: number;
 
-  @OneToMany(() => CourseEntity, (course) => course.semester)
-  courses: CourseEntity[];
+  @OneToMany(() => SemesterMajorEntity, (sm) => sm.semester)
+  majors: SemesterMajorEntity[];
 
-  @OneToMany(
-    () => SemesterMajorEntity,
-    (semester_majors) => semester_majors.semester,
-  )
-  semester_majors: SemesterMajorEntity[];
-
-  @OneToMany(() => MajorCourseEntity, (major_course) => major_course.semester)
-  major_courses: MajorCourseEntity[];
+  @OneToMany(() => LectureEntity, (lecture) => lecture.semester)
+  lectures: LectureEntity[];
 }

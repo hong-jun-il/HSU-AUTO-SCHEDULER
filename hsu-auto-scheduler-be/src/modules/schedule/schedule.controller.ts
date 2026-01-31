@@ -1,7 +1,15 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  ParseIntPipe,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { ScheduleService } from './services/schedule.service';
-import { GetCoursesDto } from './dto/getCourses.dto';
-import { GetCPSATResultDto } from './dto/getCPSATResult.dto';
+import { FilterDto } from './dto/filter.dto';
+import { ConstraintsDto } from './dto/constraints.dto';
+import { CPSATFilterDto } from './dto/cpsat-filter.dto';
 
 @Controller('schedule')
 export class ScheduleController {
@@ -19,12 +27,32 @@ export class ScheduleController {
 
   // 필터가 너무 많으므로 POST로 바꿈
   @Post('get-courses')
-  getCourses(@Body() getCoursesCondition: GetCoursesDto) {
-    return this.scheduleService.getCourses(getCoursesCondition);
+  getCourses(
+    @Body('currentPage', ParseIntPipe)
+    currentPage: number,
+    @Body('pagePerLimit', ParseIntPipe)
+    pagePerLimit: number,
+    @Body('filters') filters: FilterDto,
+  ) {
+    return this.scheduleService.getCourses(currentPage, pagePerLimit, filters);
   }
 
-  @Post('constraints')
-  handleScheduleConstaraints(@Body() getCPSATCondition: GetCPSATResultDto) {
-    return this.scheduleService.filterDataAndPostConstraints(getCPSATCondition);
+  @Post('get-cpsat')
+  handleScheduleConstaraints(
+    @Body('currentPage', ParseIntPipe)
+    currentPage: number,
+    @Body('pagePerLimit', ParseIntPipe)
+    pagePerLimit: number,
+    @Body('filters')
+    filters: CPSATFilterDto,
+    @Body('constraints')
+    constraints: ConstraintsDto,
+  ) {
+    return this.scheduleService.getCPSATResult(
+      currentPage,
+      pagePerLimit,
+      filters,
+      constraints,
+    );
   }
 }
