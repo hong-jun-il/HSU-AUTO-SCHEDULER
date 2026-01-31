@@ -1,5 +1,5 @@
 # 1. 컨테이너에서 사용할 Python 버전
-FROM python:3.12
+FROM python:3.12-slim
 
 # 2. 작업 디렉토리 설정
 WORKDIR /ortools-scheduler
@@ -16,7 +16,7 @@ COPY ./app ./app
 # 6. FastAPI 실행 (uvicorn)
 # --host 0.0.0.0 → 외부 접속 허용
 # --port 8000 → 컨테이너 내부 포트
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "4113", "--workers", "4"]
 
 # docker build -t hsu-auto-scheduler-fastapi-docker-image .
 # docker run -d --name hsu-auto-scheduler-fastapi-docker-container -p 8000:8000 hsu-auto-scheduler-fastapi-docker-image

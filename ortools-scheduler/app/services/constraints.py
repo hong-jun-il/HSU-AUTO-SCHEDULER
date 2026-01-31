@@ -1,6 +1,7 @@
 from collections import defaultdict
 from app.schemas.common.course_schema import CourseSchema
 from app.utils.get_start_time_and_end_time import get_start_time_and_end_time
+from app.schemas.common.enums import RequirementTypeEnum
 
 
 # ------- deprecated ------- #
@@ -54,11 +55,11 @@ def add_pre_selected_course_constraint(
     pre_selected_courses: list[CourseSchema],
 ):
     pre_selected_courses_ids_set = set(
-        [pre_selected_course.course_id for pre_selected_course in pre_selected_courses]
+        [pre_selected_course.id for pre_selected_course in pre_selected_courses]
     )
 
     for idx, course in enumerate(courses):
-        if course.course_id in pre_selected_courses_ids_set:
+        if course.id in pre_selected_courses_ids_set:
             model.Add(is_selected[idx] == 1)
 
 
@@ -88,38 +89,38 @@ def add_max_credit_constraint(
     # )
 
     not_zero_credit = (
-        sum(course.credit * cur for course, cur in zip(courses, is_selected)) >= 1
+        sum(course.credit * cur for course, cur in zip(courses, is_selected)) > 0
     )
 
     model.Add(limit_max)
     model.Add(not_zero_credit)
 
 
-# 과목의 이름을 기준으로 중복을 제거하는 제약조건 추가 함수
+# 과목의 코드를 기준으로 중복을 제거하는 제약조건 추가 함수
 def add_deduplicated_course_constraint(courses: list[CourseSchema], model, is_selected):
-    course_name_to_indices = defaultdict(list)
+    course_code_to_indices = defaultdict(list)
 
     # 동일한 과목들을 전체 배열에서 인덱스를 기준으로 각기 배열로 묶은 dict를 생성
     # 해당 배열들을 돌면서 is_selected 배열에서 그 배열의 is_selected의 합이 1이 넘지 않도록 제약조건 추가
     # [1, 2, 3, 4]로 묶였다면 is_selected에서 해당 인덱스들의 합은 반드시 1 이하여야 함
     for idx, course in enumerate(courses):
-        course_name_to_indices[course.course_name].append(idx)
+        course_code_to_indices[course.code].append(idx)
 
-    for indices in course_name_to_indices.values():
+    for indices in course_code_to_indices.values():
         model.Add(sum(is_selected[i] for i in indices) <= 1)
 
 
 # 사용자가 입력한 전공 기초 학점의 최솟값만큼 해에 전공 기초를 보장 제약조건 추가 함수
-def add_major_foundation_min_constraint(
-    courses: list[CourseSchema], model, is_selected, major_foundation_credit
+def add_major_basic_min_constraint(
+    courses: list[CourseSchema], model, is_selected, major_basic_credit
 ):
     model.Add(
         sum(
             course.credit * cur
             for course, cur in zip(courses, is_selected)
-            if "전기" in course.completion_types
+            if RequirementTypeEnum.MAJOR_BASIC in course.requirement_types
         )
-        >= major_foundation_credit
+        >= major_basic_credit
     )
 
 
@@ -131,7 +132,7 @@ def add_major_required_min_constraint(
         sum(
             course.credit * cur
             for course, cur in zip(courses, is_selected)
-            if "전필" in course.completion_types
+            if RequirementTypeEnum.MAJOR_REQUIRED in course.requirement_types
         )
         >= major_required_credit
     )
@@ -145,7 +146,7 @@ def add_major_elective_min_constraint(
         sum(
             course.credit * cur
             for course, cur in zip(courses, is_selected)
-            if "전선" in course.completion_types
+            if RequirementTypeEnum.MAJOR_ELECTIVE in course.requirement_types
         )
         >= major_elective_credit
     )
@@ -193,6 +194,7 @@ def add_non_overlapping_schedule_constraint(
                     get_start_time_and_end_time(next_course, cur_day)
                 )
 
+                # 강의 시간이 겹친다면 둘 중 하나는 해에 포함하지 않음
                 if (
                     cur_course_start_time_in_cur_day < next_course_end_time_in_cur_day
                     and cur_course_end_time_in_cur_day

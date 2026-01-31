@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.schemas.request.CP_SAT_request_schema import CPSATRequestSchema
+from app.schemas.common.CP_SAT_request_schema import CPSATRequestSchema
 from app.services.CP_SAT import HSU_AUTO_SCHEDULER_CP_SAT
 
 app = FastAPI()

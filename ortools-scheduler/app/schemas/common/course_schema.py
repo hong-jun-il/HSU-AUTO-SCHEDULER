@@ -1,27 +1,39 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional
-from app.schemas.common.enums import DayOrNightEnum
+from app.schemas.common.enums import (
+    DayOrNightEnum,
+    RequirementTypeEnum,
+    DeliveryMethodEnum,
+)
 from app.schemas.common.offline_schedule_schema import OfflineScheduleSchema
 
 
 class CourseSchema(BaseModel):
-    semester_id: str = Field(..., description="학기 ID")
+    id: str = Field(..., description="분반 ID")
     course_id: str = Field(..., description="강의 ID")
-    course_code: str = Field(..., description="강의 코드")
-    course_name: str = Field(..., description="강의 이름")
-    professor_names: list[str] = Field(..., min_items=1, description="교수 이름 리스트")
-    completion_types: list[str] = Field(..., description="이수 구분")
-    delivery_method: str = Field(..., description="수업 방식")
-
+    code: str = Field(..., description="강의 코드")
+    name: str = Field(..., description="강의 이름")
     credit: int = Field(..., description="학점", ge=0)
-    day_or_night: DayOrNightEnum = Field(..., description="주간/야간 여부")
+    professors: str = Field(..., description="교수 이름 리스트")
 
-    class_section: str = Field(..., description="분반")
-    grades: list[int] = Field(..., description="학년")
-
-    grade_limit: Optional[int] = Field(None, description="학년 제한")
-    online_hour: float = Field(..., description="온라인 수업 시간", ge=0)
-    offline_schedules: list[OfflineScheduleSchema] = Field(
-        None, description="오프라인 시간표"
+    requirement_types: list[RequirementTypeEnum] = Field(
+        default_factory=list, description="이수 구분"
     )
-    plan_code: Optional[str] = Field(None, description="계획 코드")
+    delivery_method: DeliveryMethodEnum = Field(..., description="수업 방식")
+    day_or_night: DayOrNightEnum = Field(..., description="주간/야간 여부")
+    section: str = Field(..., description="분반")
+    grades: list[int] = Field(default_factory=list, description="학년")
+    grade_limits: list[int] = Field(default_factory=list, description="학년 제한")
+    online_hour: float = Field(0.0, description="온라인 수업 시간", ge=0)
+    offline_schedules: list[OfflineScheduleSchema] = Field(
+        default_factory=list, description="오프라인 시간표"
+    )
+    plan_code: Optional[str] = Field(None, description="계획서 코드")
+    remark: Optional[str] = Field(None, description="비고 사항")
+
+    @field_validator("online_hour", mode="before")
+    @classmethod
+    def parse_online_hour(cls, v):
+        if isinstance(v, str):
+            return float(v)
+        return v

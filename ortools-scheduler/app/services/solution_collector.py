@@ -3,8 +3,8 @@ from app.schemas.common.course_schema import CourseSchema
 from app.schemas.common.solution_schema import SolutionSchema
 from app.utils.group_courses_by_day import group_courses_by_day
 from app.utils.get_total_course_gap import get_total_course_gap
-from app.utils.has_common_grade import has_common_grade
 from app.utils.get_no_class_days import get_no_class_days
+from app.schemas.common.enums import DeliveryMethodEnum, RequirementTypeEnum
 
 
 class AllSolutionCollector(cp_model.CpSolverSolutionCallback):
@@ -41,6 +41,29 @@ class AllSolutionCollector(cp_model.CpSolverSolutionCallback):
             selected_course.credit for selected_course in selected_courses
         )
 
+        # 현재 해의 전기 학점 합
+        total_major_basic_credit = sum(
+            selected_course.credit
+            for selected_course in selected_courses
+            if selected_course.requirement_types[0] == RequirementTypeEnum.MAJOR_BASIC
+        )
+
+        # 현재 해의 전필 학점 합
+        total_major_required_credit = sum(
+            selected_course.credit
+            for selected_course in selected_courses
+            if selected_course.requirement_types[0]
+            == RequirementTypeEnum.MAJOR_REQUIRED
+        )
+
+        # 현재 해의 전선 학점 합
+        total_major_elective_credit = sum(
+            selected_course.credit
+            for selected_course in selected_courses
+            if selected_course.requirement_types[0]
+            == RequirementTypeEnum.MAJOR_ELECTIVE
+        )
+
         grouped_courses_by_day = group_courses_by_day(selected_courses)
 
         no_class_days = get_no_class_days(grouped_courses_by_day)
@@ -52,20 +75,23 @@ class AllSolutionCollector(cp_model.CpSolverSolutionCallback):
         total_offline_course_count = sum(
             1
             for selected_course in selected_courses
-            if selected_course.delivery_method != "온라인100%"
+            if selected_course.delivery_method != DeliveryMethodEnum.ONLINE
         )
 
         # 현재 해의 총 온라인 강의 개수
         total_online_course_count = sum(
             1
             for selected_course in selected_courses
-            if selected_course.delivery_method == "온라인100%"
+            if selected_course.delivery_method == DeliveryMethodEnum.ONLINE
         )
 
         self.solutions.append(
             SolutionSchema(
                 solution_index=self.solution_count,
                 total_credit=total_credit,
+                total_major_basic_credit=total_major_basic_credit,
+                total_major_required_credit=total_major_required_credit,
+                total_major_elective_credit=total_major_elective_credit,
                 total_course_gap=total_course_gap,
                 total_offline_course_count=total_offline_course_count,
                 total_online_course_count=total_online_course_count,

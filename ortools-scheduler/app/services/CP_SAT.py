@@ -5,7 +5,7 @@ from app.services.constraints import (
     add_pre_selected_course_constraint,
     add_max_credit_constraint,
     add_deduplicated_course_constraint,
-    add_major_foundation_min_constraint,
+    add_major_basic_min_constraint,
     add_major_required_min_constraint,
     add_major_elective_min_constraint,
     add_daily_lecture_limit_constraint,
@@ -32,8 +32,8 @@ def HSU_AUTO_SCHEDULER_CP_SAT(
     )
     add_max_credit_constraint(filtered_data, model, is_selected, constraints.max_credit)
     add_deduplicated_course_constraint(filtered_data, model, is_selected)
-    add_major_foundation_min_constraint(
-        filtered_data, model, is_selected, constraints.major_foundation
+    add_major_basic_min_constraint(
+        filtered_data, model, is_selected, constraints.major_basic
     )
     add_major_required_min_constraint(
         filtered_data, model, is_selected, constraints.major_required
