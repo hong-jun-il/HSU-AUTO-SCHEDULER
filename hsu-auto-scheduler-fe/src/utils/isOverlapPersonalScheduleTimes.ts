@@ -1,8 +1,8 @@
 import { WeekdayEnum } from "@/enums/weekday.enum";
-import { GroupedOfflineScheduleByDay } from "@/types/groupedOfflineScheduleByDay.type";
+import { GroupedScheduleByDayType } from "@/types/grouped_schedule_by_day.type";
 
 export default function isOverlapPersonalScheduleTimes(
-  groupedOfflineSchedulesByDay: GroupedOfflineScheduleByDay,
+  groupedOfflineSchedulesByDay: GroupedScheduleByDayType,
 ): boolean {
   for (const day in groupedOfflineSchedulesByDay) {
     const schedulesInCurDay = [

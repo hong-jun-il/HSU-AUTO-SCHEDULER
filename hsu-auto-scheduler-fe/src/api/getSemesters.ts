@@ -12,7 +12,7 @@ export async function getSemesters(): Promise<ResponseType<SemesterType[]>> {
       next: {
         tags: ["semesters"],
       },
-      cache: "no-store",
+      cache: "force-cache",
     },
   );
 

@@ -72,9 +72,7 @@ export default function RHFTextInput<T extends FieldValues>({
         />
       </label>
       {errors[name] && (
-        <p className="pl-2 whitespace-nowrap text-red-600">
-          {String(errors[name].message)}
-        </p>
+        <p className="pl-2 text-red-600">{String(errors[name].message)}</p>
       )}
     </div>
   );

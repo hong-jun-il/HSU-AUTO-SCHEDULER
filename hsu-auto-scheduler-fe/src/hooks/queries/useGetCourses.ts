@@ -1,28 +1,33 @@
-import { COURSES_PER_PAGE } from "@/constants/CoursesPerPage";
-import { FilterType } from "@/types/filter.type";
+import { COURSES_PER_PAGE } from "@/constants/pagination.const";
 import { ResponseType } from "@/types/response.type";
-import { CourseType } from "@/types/schemas/Course.schema";
+import { CourseType } from "@/types/schemas/course.schema";
+import { CourseFilterType } from "@/types/schemas/filter.schema";
 import { useInfiniteQuery } from "@tanstack/react-query";
 
-export default function useGetCourses(filters: FilterType) {
+export default function useGetCourses(filters: CourseFilterType) {
   return useInfiniteQuery({
     queryKey: [
       "courses",
       filters.semester_id,
-      filters.major_code,
+      filters.major_id,
       filters.search,
       filters.grade,
-      JSON.stringify(filters.no_class_days),
       filters.day_or_night,
+      JSON.stringify(filters.no_class_days),
+      filters.has_lunch_break,
       JSON.stringify(filters.selected_courses),
       JSON.stringify(filters.personal_schedules),
-      filters.has_lunch_break,
     ],
     queryFn: async ({
       pageParam,
     }: {
       pageParam: number;
-    }): Promise<ResponseType<CourseType[]>> => {
+    }): Promise<
+      ResponseType<{
+        courses: CourseType[];
+        totalCount: number;
+      }>
+    > => {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_BASE_URL}/schedule/get-courses`,
         {
@@ -50,11 +55,13 @@ export default function useGetCourses(filters: FilterType) {
     },
     initialPageParam: 1,
     getNextPageParam: (lastPage, _, lastPageParam) => {
-      if (lastPage.data.length < COURSES_PER_PAGE) {
-        return undefined;
-      }
-
-      return lastPageParam + 1;
+      return lastPage.data.totalCount < COURSES_PER_PAGE
+        ? undefined
+        : lastPageParam + 1;
     },
+    select: (data) => ({
+      pages: data.pages.flatMap((page) => page.data.courses),
+      pageParams: data.pageParams,
+    }),
   });
 }

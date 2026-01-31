@@ -1,13 +1,13 @@
 // 시간표 렌더링에 필요한 강의 정보를 요알을 기준으로 묶어주는 함수
 
-import { COURSE_BLOCK_BG_COLORS } from "@/constants/CourseBlockBgColors";
 import {
-  CourseRenderInfoType,
+  CourseTimetableRenderType,
   SelectedCoursesByDayType,
-} from "@/types/courseRender.type";
-import { CourseType } from "@/types/schemas/Course.schema";
+} from "@/types/course_timetable_render.type";
 import { getTopByStartTime } from "./getTopByStartTime";
 import { getBlockHeight } from "./getBlockHeight";
+import { COURSE_BLOCK_BG_COLORS } from "@/constants/block-colors.const";
+import { CourseType } from "@/types/schemas/course.schema";
 
 export default function groupCoursesByDay(
   courses: CourseType[],
@@ -15,11 +15,11 @@ export default function groupCoursesByDay(
 ): SelectedCoursesByDayType {
   const groupedCoursesByDay: SelectedCoursesByDayType = courses.reduce(
     (acc, course, index) => {
-      const baseInfo: CourseRenderInfoType = {
-        courseId: course.course_id,
-        courseName: course.course_name,
-        courseClassSection: course.class_section,
-        professors: course.professor_names,
+      const baseInfo: CourseTimetableRenderType = {
+        id: course.id,
+        name: course.name,
+        section: course.section,
+        professors: course.professors,
         colorIndex: 0,
       };
 

@@ -1,4 +1,4 @@
-import { CourseType } from "@/types/schemas/Course.schema";
+import { CourseType } from "@/types/schemas/course.schema";
 import { StateCreator } from "zustand";
 import { combine } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";

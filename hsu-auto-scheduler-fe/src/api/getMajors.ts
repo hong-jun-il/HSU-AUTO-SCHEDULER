@@ -14,6 +14,7 @@ export default async function getMajors(
       next: {
         tags: ["majors", `${semester}`],
       },
+      // cache: "force-cache",
     },
   );
 

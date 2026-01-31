@@ -1,4 +1,4 @@
-import { CourseType } from "@/types/schemas/Course.schema";
+import { CourseType } from "@/types/schemas/course.schema";
 import { StateCreator } from "zustand";
 import { combine } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
@@ -40,7 +40,7 @@ export const createSelectedCourseSlice: StateCreator<
     },
     isCourseAdded: (semester: string, courseId: string) => {
       const semesterCourses = get().selectedCourses[semester] ?? [];
-      return semesterCourses.some((c) => c.course_id === courseId);
+      return semesterCourses.some((c) => c.id === courseId);
     },
     addCourse: (semester: string, course: CourseType) =>
       set((state) => {
@@ -52,7 +52,7 @@ export const createSelectedCourseSlice: StateCreator<
       set((state) => {
         const semesterCourses = state.selectedCourses[semester] ?? [];
         state.selectedCourses[semester] = semesterCourses.filter(
-          (c) => c.course_id !== courseId,
+          (c) => c.id !== courseId,
         );
       });
     },

@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { CPSAT_RESULT_PER_PAGE } from "@/constants/CPSATResultPerPage";
 import useGetCPSATResults from "../queries/useGetCPSATResults";
+import { CPSAT_RESULT_PER_PAGE } from "@/constants/pagination.const";
 
 export default function useCPSATSlider(totalSolutionCount: number) {
   const [currentIndex, setCurrentIndex] = useState<number>(0);
@@ -22,7 +22,7 @@ export default function useCPSATSlider(totalSolutionCount: number) {
 
     const currentPage = currentIndex % CPSAT_RESULT_PER_PAGE;
 
-    // 현재 페이지의 마지막 바로 이전 아이템일때 fetch(마지막일때 fetch하면 후처리 연산 때문에 렉걸림)
+    // 현재 페이지의 마지막 바로 이전 아이템일때 fetch
     if (hasNextPage && currentPage === CPSAT_RESULT_PER_PAGE - 2) {
       fetchNextPage();
     }

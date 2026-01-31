@@ -1,4 +1,4 @@
-import TimeTableMain from "./_components/01_templates/TimeTableMain";
+import TimeTableMain from "./_components/table/TimeTableMain";
 
 export default function TimeTablePage() {
   return <TimeTableMain />;

@@ -10,9 +10,9 @@ import {
 } from "react-hook-form";
 import CustomSelectBox from "../ui/CustomSelectBox";
 import useFocusState from "@/hooks/common/useFocusState";
-import { createCPSATSchemaDefaultValues } from "@/types/schemas/CreateCPSAT.schema";
 import CloseIcon from "@/assets/icons/CloseIcon";
 import clsx from "clsx";
+import { courseFilterDefaultValues } from "@/types/schemas/filter.schema";
 
 type Props<T extends FieldValues> = {
   name: Path<T>;
@@ -44,8 +44,8 @@ export default function RHFCustomSelect<T extends FieldValues>({
   const handleResetField = () => {
     setValue(
       name,
-      createCPSATSchemaDefaultValues[
-        name as keyof typeof createCPSATSchemaDefaultValues
+      courseFilterDefaultValues[
+        name as keyof typeof courseFilterDefaultValues
       ] as PathValue<T, Path<T>>,
     );
   };

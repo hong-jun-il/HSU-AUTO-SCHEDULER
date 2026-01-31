@@ -1,9 +1,10 @@
 import "./../styles/globals.css";
 import RQProvider from "@/components/RQProvider";
-import RHFProvider from "@/components/RHFProvider";
 import ResponsiveProvider from "@/components/ResponsiveProvider";
 import Head from "@/components/SEO/Head";
 import { headers } from "next/headers";
+import OptionalFilterFormProvider from "@/components/CourseFilterFormProvider";
+import CPSATFilterFormProvider from "@/components/CPSATFilterFormProvider";
 
 export default async function RootLayout({
   children,
@@ -19,11 +20,15 @@ export default async function RootLayout({
       <Head />
       <body>
         <RQProvider>
-          <RHFProvider>
-            <ResponsiveProvider initialDevice={isMobile ? "mobile" : "desktop"}>
-              {children}
-            </ResponsiveProvider>
-          </RHFProvider>
+          <OptionalFilterFormProvider>
+            <CPSATFilterFormProvider>
+              <ResponsiveProvider
+                initialDevice={isMobile ? "mobile" : "desktop"}
+              >
+                {children}
+              </ResponsiveProvider>
+            </CPSATFilterFormProvider>
+          </OptionalFilterFormProvider>
         </RQProvider>
       </body>
     </html>

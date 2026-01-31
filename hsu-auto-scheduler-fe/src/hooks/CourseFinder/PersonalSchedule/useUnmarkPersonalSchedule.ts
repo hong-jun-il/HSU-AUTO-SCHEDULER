@@ -23,8 +23,7 @@ export default function useUnmarkPersonalSchedule() {
     if (!shouldDelete) return;
 
     const targetPersonalSchedule = personalSchedules[currentSemester].find(
-      (personalSchedule) =>
-        personalSchedule.personal_schedule_id === targetPersonalScheduleId,
+      (personalSchedule) => personalSchedule.id === targetPersonalScheduleId,
     );
 
     if (targetPersonalSchedule) {

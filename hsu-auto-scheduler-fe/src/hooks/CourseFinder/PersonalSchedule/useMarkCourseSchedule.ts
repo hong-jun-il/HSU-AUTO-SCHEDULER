@@ -1,9 +1,9 @@
 import { useTimetableStore } from "@/store/timetable/timetableStore";
-import { CourseType } from "@/types/schemas/Course.schema";
 import { useShallow } from "zustand/shallow";
 import useCurrentSemester from "../../common/useCurrentSemester";
 import calcMinIndex from "@/utils/getTimeIndex";
 import isOverlapTimeSelections from "@/utils/isOverlapTimeSelections";
+import { CourseType } from "@/types/schemas/course.schema";
 
 export default function useMarkCourseSchedule() {
   const {
@@ -65,12 +65,10 @@ export default function useMarkCourseSchedule() {
     }
   };
 
-  // 클릭 시 추가랑 마크, 호버 상태 없애는 함수
+  // course 선택 함수
   const onClickCourse = (course: CourseType) => {
-    if (isCourseAdded(currentSemester, course.course_id)) {
-      alert(
-        `${course.course_name}-${course.class_section}반은 이미 추가한 수업입니다`,
-      );
+    if (isCourseAdded(currentSemester, course.id)) {
+      alert(`${course.name}-${course.section}반은 이미 추가한 수업입니다`);
       return;
     }
 

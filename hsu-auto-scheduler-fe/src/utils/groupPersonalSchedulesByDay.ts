@@ -3,7 +3,7 @@
 import { PersonalSchedulesByDayType } from "@/types/personalScheduleRender.type";
 import { getTopByStartTime } from "./getTopByStartTime";
 import { getBlockHeight } from "./getBlockHeight";
-import { PersonalScheduleType } from "@/types/schemas/PersonalSchedule.schema";
+import { PersonalScheduleType } from "@/types/schemas/personal_schedule.schema";
 
 export default function groupPersonalScheduleByDay(
   personalSchedules: PersonalScheduleType[],
@@ -14,7 +14,7 @@ export default function groupPersonalScheduleByDay(
       const newPersonalSchedulesInCurDay = acc[offlineSchedule.day] ?? [];
 
       newPersonalSchedulesInCurDay.push({
-        personalScheduleId: cur.personal_schedule_id,
+        personalScheduleId: cur.id,
         personalScheduleName: cur.personal_schedule_name,
         offlineSchedule,
         colorIndex: index,
