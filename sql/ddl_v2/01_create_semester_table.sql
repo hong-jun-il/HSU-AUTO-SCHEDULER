@@ -1,6 +1,10 @@
-CREATE TABLE semester (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    year INT NOT NULL,
-    term TINYINT NOT NULL CHECK (term IN (1, 2, 3, 4)),
-    CONSTRAINT uk_semester UNIQUE(year, term)
+create table semester (
+   id   varchar(20) primary key,
+   year int not null,
+   term tinyint not null check ( term in ( 1,
+                                           2,
+                                           3,
+                                           4 ) ),
+   constraint uk_semester unique ( year,
+                                   term )
 );
