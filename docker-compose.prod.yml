@@ -1,4 +1,18 @@
 services:
+  # nginx:
+  #   image: nginx:1.25-alpine
+  #   restart: always
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./nginx:/etc/nginx/conf.d:ro
+  #     - ./nginx/ssl:/etc/letsencrypt:ro
+  #     - ./data/certbot:/var/www/certbot:ro
+  #   networks:
+  #     - public
+  #   depends_on:
+  #     - nestjs
   mysql:
     image: mysql:8.4
     container_name: mysql-db
@@ -29,8 +43,10 @@ services:
     build:
       context: ./hsu-auto-scheduler-be
       dockerfile: dockerfile.prod
+    # expose:
+    #   - ${NESTJS_PORT}
     ports:
-      - ${NESTJS_PORT}:5000
+      - 5000:5000
     networks:
       - public
       - private

@@ -44,7 +44,7 @@ export default function usePersonalScheduleModal() {
   // 개인 스케줄 수정: 타겟 개인 스케줄 초기화, 모달 열기, 수정 모드로 전환
   const handleEditPersonalSchedule = (targetId: string) => {
     const targetPersonalSchedule = personalSchedules[currentSemester].find(
-      (ps) => ps.personal_schedule_id === targetId,
+      (ps) => ps.id === targetId,
     );
 
     if (targetPersonalSchedule) {

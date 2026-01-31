@@ -59,7 +59,7 @@ import { dataSourceOptions } from 'db/datasource';
       useClass: ResponseInterceptor,
     },
     // 쓰로틀링
-    ...(process.env.ENV === 'develop'
+    ...(process.env.ENV === 'dev'
       ? []
       : [
           {

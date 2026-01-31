@@ -4,13 +4,15 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { WeekdayEnum } from 'src/common/enums/weekday.enum';
 import { firstValueFrom } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
-import { CourseDto } from 'src/common/dto/03_course.dto';
 import { SemesterEntity } from 'src/common/entities/01_semester.entity';
 import { MajorEntity } from 'src/common/entities/02_major.entity';
-import { CourseFilteringQueryService } from './CourseFilteringQuery.service';
-import { GetCoursesDto } from '../dto/getCourses.dto';
-import { GetCPSATResultDto } from '../dto/getCPSATResult.dto';
-import { ClassSectionEntity } from 'src/common/entities/05_classSection.entity';
+import { CourseEntity } from 'src/common/entities/04_course.entity';
+import { LectureEntity } from 'src/common/entities/06_lecture.entity';
+import { CourseViewDto } from '../dto/course-view.dto';
+import { FilterDto } from '../dto/filter.dto';
+import { ConstraintsDto } from '../dto/constraints.dto';
+import { CPSATFilterDto } from '../dto/cpsat-filter.dto';
+import { DayOrNightEnum } from 'src/common/enums/day_or_night.enum';
 
 export type WeeklyScheduleType = {
   schedule_name: string;
@@ -27,13 +29,44 @@ export class ScheduleService {
     @InjectRepository(MajorEntity)
     private readonly majorRepo: Repository<MajorEntity>,
 
-    @InjectRepository(ClassSectionEntity)
-    private readonly ClassSectionRepo: Repository<ClassSectionEntity>,
+    @InjectRepository(CourseEntity)
+    private readonly courseRepo: Repository<CourseEntity>,
+
+    @InjectRepository(LectureEntity)
+    private readonly lectureRepo: Repository<LectureEntity>,
 
     private readonly httpService: HttpService,
 
-    private readonly courseFilterQueryService: CourseFilteringQueryService,
+    // private readonly courseFilterQueryService: CourseFilteringQueryService,
   ) {}
+
+  filterByWeeklyScheduleMap(
+    lectures: LectureEntity[],
+    weeklyScheduleMap: Map<WeekdayEnum, WeeklyScheduleType[]>,
+  ): LectureEntity[] {
+    lectures = lectures.filter((lecture) => {
+      return lecture.offline_schedules.every((os) => {
+        const { day, start_time: lectureStart, end_time: lectureEnd } = os;
+
+        const daySchedule = weeklyScheduleMap.get(day);
+
+        if (!daySchedule || daySchedule.length === 0) {
+          return true;
+        }
+
+        return daySchedule.every((schedule) => {
+          const { start_time: dayScheduleStart, end_time: dayScheduleEnd } =
+            schedule;
+          const isNotOverlapping =
+            lectureStart >= dayScheduleEnd || lectureEnd <= dayScheduleStart;
+
+          return isNotOverlapping;
+        });
+      });
+    });
+
+    return lectures;
+  }
 
   // 모든 학년-학기를 조회하는 함수
   async getSemesters() {
@@ -50,10 +83,11 @@ export class ScheduleService {
   async getMajors(semesterId: string) {
     const majors = await this.majorRepo
       .createQueryBuilder('m')
-      .leftJoinAndSelect('semester_major', 'sm', 'm.major_code = sm.major_code')
-      .where('sm.semester_id = :semester_id', {
-        semester_id: semesterId,
+      .innerJoin('semester_major', 'sm', 'm.id = sm.major_id')
+      .where('sm.semester_id = :semesterId', {
+        semesterId: semesterId,
       })
+      .select(['m.id', 'm.code', 'm.name'])
       .getMany();
 
     return {
@@ -62,339 +96,379 @@ export class ScheduleService {
     };
   }
 
-  // 필터에 맞는 모든 강의들을 가져오는 함수
-  async getCourses(getCoursesCondition: GetCoursesDto) {
-    const { currentPage, pagePerLimit, filters } = getCoursesCondition;
+  /**
+    SQL filters
+      1. 학기
+      2. 전공
+      3. 검색어
+      4. 학년
+      5. 주야
+      6. 공강 요일
+      7. 선택된 강의의 과목 코드
 
+    JS filters
+      8. 선택된 강의의 시간대(Map에 추가 후 한꺼번에 필터링)
+      9. 선택된 개인 스케줄의 시간대(Map에 추가 후 한꺼번에 필터링)
+      10. 점심 시간(12:00 ~ 13:00)
+  */
+  async getCourses(
+    currentPage: number,
+    pagePerLimit: number,
+    filters: FilterDto,
+  ) {
     const {
       semester_id,
-      major_code,
+      major_id,
       search,
       grade,
       day_or_night,
       no_class_days,
-      personal_schedules,
       selected_courses,
+      personal_schedules,
       has_lunch_break,
     } = filters;
 
-    /*
-      SQL문으로 필터링 할 것들
-      학기, 전공, 주야, 공강 요일, 미리 선택된 강의와 같은 과목코드의 강의,
-
-      JS로 필터링 할 것들
-      학년, 선택된 강의와 같은 시간의 강의,
-      스케줄 시간대,
-      점심 true라면 점심 시간에 포함된 강의들
-    */
-    const classSectionRepoAlias = 'cs';
-    const courseRepoAlias = 'c';
-    const offlineScheduleRepoAlias = 'os';
-    const majorCourseRepoAlias = 'mc';
-
-    const query = this.ClassSectionRepo.createQueryBuilder(
-      classSectionRepoAlias,
-    )
-      .leftJoinAndSelect('cs.course', courseRepoAlias)
-      .leftJoinAndSelect('cs.offline_schedules', offlineScheduleRepoAlias)
-      .leftJoinAndSelect('c.major_courses', majorCourseRepoAlias);
-
-    // 선택된 강의와 개인 스케줄을 요일 별로 묶을 Map
     const weeklyScheduleMap = new Map<WeekdayEnum, WeeklyScheduleType[]>();
 
-    // 1. sql: 학기 필터링(필수)
-    const semesterFilterQuery =
-      this.courseFilterQueryService.getCoursesBySemester(
-        classSectionRepoAlias,
-        semester_id,
-      );
+    const query = this.lectureRepo
+      .createQueryBuilder('l')
+      .leftJoinAndSelect('l.course', 'c')
+      .leftJoinAndSelect('c.major_course', 'mc')
+      .leftJoinAndSelect('mc.major', 'm')
+      .leftJoinAndSelect('l.offline_schedules', 'os')
+      // SQL: 1. 학기 필터링
+      .where('l.semester_id = :semester_id', { semester_id });
 
-    query.where(semesterFilterQuery.clause, semesterFilterQuery.params);
-
-    // 2. sql: 전공 필터링(선택)
-    if (major_code) {
-      const majorFilterQuery = this.courseFilterQueryService.getCoursesByMajor(
-        classSectionRepoAlias,
-        major_code,
-      );
-
-      query.andWhere(majorFilterQuery.clause, majorFilterQuery.params);
+    // SQL: 2. 전공 필터링
+    if (major_id) {
+      query.andWhere('m.id = :major_id', { major_id });
     }
 
-    // 3. 검색어 필터링(선택)
+    // SQL: 3. 검색어 필터링
     if (search) {
-      const searchFilterQuery =
-        this.courseFilterQueryService.getCoursesBySearch(
-          classSectionRepoAlias,
-          courseRepoAlias,
-          search,
-        );
-
-      query.andWhere(searchFilterQuery.clause, searchFilterQuery.params);
-    }
-
-    // 4. sql: 주야 필터링(선택)
-    if (day_or_night) {
-      const dayOrNightFilterQuery =
-        this.courseFilterQueryService.getCoursesByDayOrNight(
-          classSectionRepoAlias,
-          day_or_night,
-        );
-
       query.andWhere(
-        dayOrNightFilterQuery.clause,
-        dayOrNightFilterQuery.params,
+        '(c.code LIKE :search OR c.name LIKE :search OR l.professors LIKE :search)',
+        {
+          search: `%${search}%`,
+        },
       );
     }
 
-    // 5. sql: 공강 요일 필터링(선택)
-    if (no_class_days.length > 0) {
-      const noClassDaysFilterQuery =
-        this.courseFilterQueryService.getCoursesByNoClassDays(
-          offlineScheduleRepoAlias,
-          no_class_days,
-        );
-
-      query.andWhere(
-        noClassDaysFilterQuery.clause,
-        noClassDaysFilterQuery.params,
-      );
-    }
-
-    // 6. sql: 미리 선택된 강의 필터링(선택)
-    if (selected_courses.length > 0) {
-      const selectedCoursesFilterQuery =
-        this.courseFilterQueryService.getCoursesByPreSelectedCourses(
-          courseRepoAlias,
-          selected_courses,
-          weeklyScheduleMap,
-        );
-
-      query.andWhere(
-        selectedCoursesFilterQuery.clause,
-        selectedCoursesFilterQuery.params,
-      );
-    }
-
-    // 7. js: 개인 스케줄(선택)
-    if (personal_schedules.length > 0) {
-      // 그냥 weeklyScheduleMap에 추가만 하는 것이므로 따로 추가적인 작업 없이 호출만
-      this.courseFilterQueryService.getCoursesByPersonalSchedulesFilter(
-        personal_schedules,
-        no_class_days,
-        weeklyScheduleMap,
-      );
-    }
-
-    // 1차로 필터링된 데이터
-    const filteredCourses = await query.getMany();
-
-    let flattendedResults: CourseDto[] = filteredCourses.map((fc) => {
-      const { course: courseField, ...rest } = fc;
-
-      return {
-        semester_id: courseField.semester_id,
-        course_id: rest.class_section_id,
-        course_code: courseField.course_code,
-        course_name: courseField.course_name,
-        professor_names: rest.professor_names.split(','),
-        completion_types: courseField.completion_type.split('/'),
-        delivery_method: rest.delivery_method,
-        credit: courseField.credit,
-        day_or_night: rest.day_or_night,
-        class_section: rest.class_section,
-        grades: courseField.grade.split('/').map(Number),
-        grade_limit: courseField.grade_limit,
-        online_hour: rest.online_hour,
-        offline_schedules: rest.offline_schedules,
-        plan_code: rest.plan_code,
-      };
-    });
-
-    // 8. js: 학년 필터링(선택)
+    // SQL: 4. 학년 필터링
     if (grade) {
-      flattendedResults = flattendedResults.filter((course) => {
-        if (course.grade_limit && course.grade_limit !== grade) {
-          return false;
-        }
+      query.andWhere('mc.grade IN (:...grades)', {
+        grades: [0, grade],
+      });
+    }
 
-        return course.grades.some((gd) => {
-          return gd === 0 || gd === grade;
+    // SQL: 5. 주야 필터링
+    if (day_or_night) {
+      query.andWhere('l.day_or_night IN (:...day_or_night)', {
+        day_or_night: [DayOrNightEnum.BOTH, day_or_night],
+      });
+    }
+
+    // SQL: 6. 공강 요일 필터링
+    if (no_class_days.length > 0) {
+      query.andWhere(
+        '(os.day NOT IN (:...excludeDays) OR os.lecture_id IS NULL)',
+        {
+          excludeDays: no_class_days,
+        },
+      );
+    }
+
+    // SQL: 7. 선택된 강의의 과목코드 필터링
+    // JS: 8. WeeklyScheduleMap에 해당 강의의 스케줄 추가
+    if (selected_courses.length > 0) {
+      query.andWhere('c.code NOT IN (:...selected_course_codes)', {
+        selected_course_codes: selected_courses.map((course) => {
+          course.offline_schedules.forEach((schedule) => {
+            const { day, start_time, end_time } = schedule;
+
+            const newDaySchedule = weeklyScheduleMap.get(day) ?? [];
+
+            newDaySchedule.push({
+              schedule_name: course.name,
+              start_time,
+              end_time,
+            });
+
+            weeklyScheduleMap.set(day, newDaySchedule);
+          });
+
+          return course.code;
+        }),
+      });
+    }
+
+    // JS: 9. Personal Schedule을 WeeklyScheduleMap에 추가
+    if (personal_schedules.length > 0) {
+      const noClassDaysSet = new Set(no_class_days);
+
+      personal_schedules.forEach((ps) => {
+        ps.offline_schedules.forEach((schedule) => {
+          const { day, start_time, end_time } = schedule;
+
+          // 해당 스케줄이 공강 요일에 포함되지 않는다면 weeklyScheduleMap에 추가
+          // 공강 요일에 스케줄이 포함된다면 굳이 추가하여 JS로 필터링 할 이유가 없음
+          if (!noClassDaysSet.has(day)) {
+            const newDaySchedule = weeklyScheduleMap.get(day) ?? [];
+
+            newDaySchedule.push({
+              schedule_name: ps.personal_schedule_name,
+              start_time,
+              end_time,
+            });
+
+            weeklyScheduleMap.set(day, newDaySchedule);
+          }
         });
       });
     }
 
-    // weeklyScheduleMap에 포함되어 있는 시간대를 바탕으로 courses를 필터링
-    flattendedResults =
-      this.courseFilterQueryService.getCoursesFilterByWeeklySchedule(
-        flattendedResults,
-        weeklyScheduleMap,
-      );
+    let result = await query.getMany();
 
-    // 9. js: 점심 시간 보장 제약이 true일 경우 강의의 시간이 점심 시간과 겹치는지 확인하는 로직
+    // JS: Map에 추가된 스케줄들과 겹치는 시간 필터링
+    result = this.filterByWeeklyScheduleMap(result, weeklyScheduleMap);
+
+    // JS: 10. 점심 시간 필터링
     if (has_lunch_break) {
-      flattendedResults =
-        this.courseFilterQueryService.getCoursesByLunchTimeFilter(
-          flattendedResults,
-        );
+      const lunchStart = 12 * 60;
+      const lunchEnd = 13 * 60;
+
+      result = result.filter((lecture) => {
+        return lecture.offline_schedules.every((os) => {
+          const { start_time, end_time } = os;
+
+          const isNotOverlapping =
+            start_time >= lunchEnd || end_time <= lunchStart;
+
+          return isNotOverlapping;
+        });
+      });
     }
 
     const paginationStart = (currentPage - 1) * pagePerLimit;
     const paginationEnd = paginationStart + pagePerLimit;
 
-    flattendedResults = flattendedResults.slice(paginationStart, paginationEnd);
+    const data: CourseViewDto[] = result
+      .slice(paginationStart, paginationEnd)
+      .map((lecture) => {
+        return {
+          id: lecture.id,
+          course_id: lecture.course_id,
+          code: lecture.course.code,
+          name: lecture.course.name,
+          credit: lecture.course.credit,
+          requirement_types: [
+            ...new Set(
+              lecture.course.major_course.map((mc) => mc.requirement_type),
+            ),
+          ],
+          grades: [
+            ...new Set(
+              lecture.course.major_course
+                .map((mc) => mc.grade)
+                .sort((a, b) => a - b),
+            ),
+          ],
+          grade_limits: [
+            ...new Set(
+              lecture.course.major_course
+                .map((mc) => mc.grade_limit)
+                .filter((gl): gl is number => gl !== null)
+                .sort((a, b) => a - b),
+            ),
+          ],
+          section: lecture.section,
+          delivery_method: lecture.delivery_method,
+          day_or_night: lecture.day_or_night,
+          professors: lecture.professors,
+          online_hour: lecture.online_hour,
+          plan_code: lecture.plan_code,
+          remark: lecture.remark,
+          offline_schedules: lecture.offline_schedules,
+        };
+      });
 
     return {
-      mssage: '성공',
-      data: flattendedResults,
+      message: `강의 데이터 ${result.length}개 조회 성공`,
+      data: {
+        courses: data,
+        totalCount: data.length,
+      },
     };
   }
 
-  async filterDataAndPostConstraints(getCPSATCondition: GetCPSATResultDto) {
-    const { currentPage, pagePerLimit, semester_id, constraints } =
-      getCPSATCondition;
+  // getCourses와 search를 제외한건 동일함
+  // 중복되는 로직이 많으니 캐싱 등 구조 개선 필요
+  async getCPSATResult(
+    currentPage: number,
+    pagePerLimit: number,
+    filters: CPSATFilterDto,
+    constraints: ConstraintsDto,
+  ) {
+    const {
+      semester_id,
+      major_id,
+      grade,
+      day_or_night,
+      no_class_days,
+      selected_courses,
+      personal_schedules,
+      has_lunch_break,
+    } = filters;
 
-    // 선택된 강의와 개인 스케줄을 요일 별로 묶을 Map
     const weeklyScheduleMap = new Map<WeekdayEnum, WeeklyScheduleType[]>();
 
-    const classSectionRepoAlias = 'cs';
-    const courseRepoAlias = 'c';
-    const offlineScheduleRepoAlias = 'os';
-    const majorCourseRepoAlias = 'mc';
-
-    const query = this.ClassSectionRepo.createQueryBuilder(
-      classSectionRepoAlias,
-    )
-      .leftJoinAndSelect('cs.course', courseRepoAlias)
-      .leftJoinAndSelect('cs.offline_schedules', offlineScheduleRepoAlias)
-      .leftJoinAndSelect('c.major_courses', majorCourseRepoAlias);
-
-    // 1. sql: 학기 필터링(필수)
-    const semesterFilterQuery =
-      this.courseFilterQueryService.getCoursesBySemester(
-        classSectionRepoAlias,
-        semester_id,
-      );
-    query.andWhere(semesterFilterQuery.clause, semesterFilterQuery.params);
-
-    // 2. 전공 필터링
-    const majorFilterQuery = this.courseFilterQueryService.getCoursesByMajor(
-      classSectionRepoAlias,
-      constraints.major_code,
-    );
-    query.andWhere(majorFilterQuery.clause, majorFilterQuery.params);
-
-    // 3. 주야 필터링
-    const dayOrNightFilterQuery =
-      this.courseFilterQueryService.getCoursesByDayOrNight(
-        classSectionRepoAlias,
-        constraints.day_or_night,
-      );
-    query.andWhere(dayOrNightFilterQuery.clause, dayOrNightFilterQuery.params);
-
-    // 4. 공강 요일 필터링(선택된 공강 요일이 있을 시)
-    if (constraints.no_class_days.length > 0) {
-      const noClassDaysFilterQuery =
-        this.courseFilterQueryService.getCoursesByNoClassDays(
-          offlineScheduleRepoAlias,
-          constraints.no_class_days,
-        );
-
-      query.andWhere(
-        noClassDaysFilterQuery.clause,
-        noClassDaysFilterQuery.params,
-      );
-    }
-
-    // 5. 미리 선택된 강의들의 강의 코드로 필터링
-    if (constraints.selected_courses.length > 0) {
-      const selectedCoursesFilterQuery =
-        this.courseFilterQueryService.getCoursesByPreSelectedCourses(
-          courseRepoAlias,
-          constraints.selected_courses,
-          weeklyScheduleMap,
-        );
-
-      query.andWhere(
-        selectedCoursesFilterQuery.clause,
-        selectedCoursesFilterQuery.params,
-      );
-    }
-
-    // 6. 개인 스케줄
-    if (constraints.personal_schedules.length > 0) {
-      // 그냥 weeklyScheduleMap에 추가만 하는 것이므로 따로 추가적인 작업 없이 호출만
-      this.courseFilterQueryService.getCoursesByPersonalSchedulesFilter(
-        constraints.personal_schedules,
-        constraints.no_class_days,
-        weeklyScheduleMap,
-      );
-    }
-
-    // 1차로 필터링된 데이터
-    const filteredCourses = await query.getMany();
-
-    let flattendedResults: CourseDto[] = filteredCourses.map((fc) => {
-      const { course: courseField, ...rest } = fc;
-
-      return {
-        semester_id: courseField.semester_id,
-        course_id: rest.class_section_id,
-        course_code: courseField.course_code,
-        course_name: courseField.course_name,
-        professor_names: rest.professor_names.split(','),
-        completion_types: courseField.completion_type.split('/'),
-        delivery_method: rest.delivery_method,
-        credit: courseField.credit,
-        day_or_night: rest.day_or_night,
-        class_section: rest.class_section,
-        grades: courseField.grade.split('/').map(Number),
-        grade_limit: courseField.grade_limit,
-        online_hour: rest.online_hour,
-        offline_schedules: rest.offline_schedules,
-        plan_code: rest.plan_code,
-      };
-    });
-
-    // 7. 학년 필터링
-    flattendedResults = flattendedResults.filter((course) => {
-      if (course.grade_limit && course.grade_limit !== constraints.grade) {
-        return false;
-      }
-
-      return course.grades.some((gd) => {
-        return gd === 0 || gd === constraints.grade;
+    const query = this.lectureRepo
+      .createQueryBuilder('l')
+      .leftJoinAndSelect('l.course', 'c')
+      .leftJoinAndSelect('c.major_course', 'mc')
+      .leftJoinAndSelect('mc.major', 'm')
+      .leftJoinAndSelect('l.offline_schedules', 'os')
+      // SQL: 1. 학기 필터링
+      .where('l.semester_id = :semester_id', { semester_id })
+      // SQL: 2. 전공 필터링
+      .andWhere('m.id = :major_id', { major_id })
+      // SQL: 3. 학년 필터링
+      .andWhere('mc.grade IN (:...grades)', {
+        grades: [0, grade],
+      })
+      // SQL: 4. 주야 필터링
+      .andWhere('l.day_or_night IN (:...day_or_night)', {
+        day_or_night: [DayOrNightEnum.BOTH, day_or_night],
       });
-    });
 
-    // weeklyScheduleMap에 포함되어 있는 시간대를 바탕으로 courses를 필터링
-    flattendedResults =
-      this.courseFilterQueryService.getCoursesFilterByWeeklySchedule(
-        flattendedResults,
-        weeklyScheduleMap,
+    // SQL: 5. 공강 요일 필터링
+    if (no_class_days.length > 0) {
+      query.andWhere(
+        '(os.day NOT IN (:...excludeDays) OR os.lecture_id IS NULL)',
+        {
+          excludeDays: no_class_days,
+        },
       );
-
-    // 8. js: 점심 시간 보장 제약이 true일 경우 강의의 시간이 점심 시간과 겹치는지 확인하는 로직
-    if (constraints.has_lunch_break) {
-      flattendedResults =
-        this.courseFilterQueryService.getCoursesByLunchTimeFilter(
-          flattendedResults,
-        );
     }
 
-    const finalFilteredCourses: CourseDto[] = [
-      ...constraints.selected_courses,
-      ...flattendedResults,
-    ];
+    // SQL: 6. 선택된 강의의 과목코드 필터링
+    // JS: 7. WeeklyScheduleMap에 해당 강의의 스케줄 추가
+    if (selected_courses.length > 0) {
+      query.andWhere('c.code NOT IN (:...selected_course_codes)', {
+        selected_course_codes: selected_courses.map((course) => {
+          course.offline_schedules.forEach((schedule) => {
+            const { day, start_time, end_time } = schedule;
 
-    // console.log(JSON.stringify(finalFilteredCourses, null, 2));
+            const newDaySchedule = weeklyScheduleMap.get(day) ?? [];
+
+            newDaySchedule.push({
+              schedule_name: course.name,
+              start_time,
+              end_time,
+            });
+
+            weeklyScheduleMap.set(day, newDaySchedule);
+          });
+
+          return course.code;
+        }),
+      });
+    }
+
+    // JS: 8. Personal Schedule을 WeeklyScheduleMap에 추가
+    if (personal_schedules.length > 0) {
+      const noClassDaysSet = new Set(no_class_days);
+
+      personal_schedules.forEach((ps) => {
+        ps.offline_schedules.forEach((schedule) => {
+          const { day, start_time, end_time } = schedule;
+
+          // 해당 스케줄이 공강 요일에 포함되지 않는다면 weeklyScheduleMap에 추가
+          // 공강 요일에 스케줄이 포함된다면 굳이 추가하여 JS로 필터링 할 이유가 없음
+          if (!noClassDaysSet.has(day)) {
+            const newDaySchedule = weeklyScheduleMap.get(day) ?? [];
+
+            newDaySchedule.push({
+              schedule_name: ps.personal_schedule_name,
+              start_time,
+              end_time,
+            });
+
+            weeklyScheduleMap.set(day, newDaySchedule);
+          }
+        });
+      });
+    }
+
+    let result = await query.getMany();
+
+    // JS: Map에 추가된 스케줄들과 겹치는 시간 필터링
+    result = this.filterByWeeklyScheduleMap(result, weeklyScheduleMap);
+
+    // JS: 9. 점심 시간 필터링
+    if (has_lunch_break) {
+      const lunchStart = 12 * 60;
+      const lunchEnd = 13 * 60;
+
+      result = result.filter((lecture) => {
+        return lecture.offline_schedules.every((os) => {
+          const { start_time, end_time } = os;
+
+          const isNotOverlapping =
+            start_time >= lunchEnd || end_time <= lunchStart;
+
+          return isNotOverlapping;
+        });
+      });
+    }
+
+    const data: CourseViewDto[] = [
+      ...selected_courses,
+      ...result.map((lecture) => {
+        return {
+          id: lecture.id,
+          course_id: lecture.course_id,
+          code: lecture.course.code,
+          name: lecture.course.name,
+          credit: lecture.course.credit,
+          requirement_types: [
+            ...new Set(
+              lecture.course.major_course.map((mc) => mc.requirement_type),
+            ),
+          ],
+          grades: [
+            ...new Set(
+              lecture.course.major_course
+                .map((mc) => mc.grade)
+                .sort((a, b) => a - b),
+            ),
+          ],
+          grade_limits: [
+            ...new Set(
+              lecture.course.major_course
+                .map((mc) => mc.grade_limit)
+                .filter((gl): gl is number => gl !== null)
+                .sort((a, b) => a - b),
+            ),
+          ],
+          section: lecture.section,
+          delivery_method: lecture.delivery_method,
+          day_or_night: lecture.day_or_night,
+          professors: lecture.professors,
+          online_hour: lecture.online_hour,
+          plan_code: lecture.plan_code,
+          remark: lecture.remark,
+          offline_schedules: lecture.offline_schedules,
+        };
+      }),
+    ];
 
     const response = await firstValueFrom(
       this.httpService.post(`${process.env.FAST_API_BASE_URL}/cp-sat`, {
-        filtered_data: finalFilteredCourses,
+        filtered_data: data,
         // 밑의 강의들은 무조건 포함되도록 하기 위해서 같이 보냄
-        pre_selected_courses: constraints.selected_courses,
-        constraints: constraints,
+        pre_selected_courses: selected_courses,
+        constraints,
       }),
     );
 

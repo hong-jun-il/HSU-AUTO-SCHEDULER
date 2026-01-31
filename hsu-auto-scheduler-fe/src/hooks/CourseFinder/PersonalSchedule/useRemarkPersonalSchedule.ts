@@ -1,7 +1,7 @@
 import { useTimetableStore } from "@/store/timetable/timetableStore";
 import { useShallow } from "zustand/shallow";
 import useCurrentSemester from "../../common/useCurrentSemester";
-import { PersonalScheduleType } from "@/types/schemas/PersonalSchedule.schema";
+import { PersonalScheduleType } from "@/types/schemas/personal_schedule.schema";
 import groupOfflineScheduleByDay from "@/utils/groupOfflineScheduleByDay";
 import { MarkResultType } from "@/types/markResult.type";
 import isOverlapPersonalScheduleTimes from "@/utils/isOverlapPersonalScheduleTimes";
@@ -52,9 +52,7 @@ export default function useRemarkPersonalSchedule() {
     );
 
     const prevPersonalSchedule = personalSchedulesInCurSemester.find(
-      (ps) =>
-        ps.personal_schedule_id ===
-        updatedPersonalSchedule.personal_schedule_id,
+      (ps) => ps.id === updatedPersonalSchedule.id,
     );
 
     const prevPersonalScheduleOfflineSchedules =

@@ -1,4 +1,4 @@
-import { PersonalScheduleType } from "@/types/schemas/PersonalSchedule.schema";
+import { PersonalScheduleType } from "@/types/schemas/personal_schedule.schema";
 
 // 개인 스케줄 이름과 장소의 모든 앞 뒤 공백을 제거하는 함수
 export default function cleanPersonalSchedule(
@@ -12,14 +12,14 @@ export default function cleanPersonalSchedule(
       const trimmedPlace = offlineSchedule.place?.trim();
 
       if (!trimmedPlace) {
-        return { ...offlineSchedule, place: undefined };
+        return { ...offlineSchedule, place: "" };
       }
 
       return offlineSchedule;
     },
   );
 
-  const cleanedPersonalSchedule = {
+  const cleanedPersonalSchedule: PersonalScheduleType = {
     ...personalSchedule,
     personal_schedule_name: cleanedPersonalScheduleName,
     offline_schedules: cleanedOfflineSchedules,

@@ -1,4 +1,4 @@
-import { PersonalScheduleType } from "@/types/schemas/PersonalSchedule.schema";
+import { PersonalScheduleType } from "@/types/schemas/personal_schedule.schema";
 import cleanPersonalSchedule from "@/utils/cleanPersonalSchedule";
 import { StateCreator } from "zustand";
 import { combine } from "zustand/middleware";
@@ -74,7 +74,7 @@ export const createPersonalScheduleSlice: StateCreator<
 
         state.personalSchedules[semester] =
           personalSchedulesInCurSemester.filter(
-            (ps) => ps.personal_schedule_id !== personalScheduleId,
+            (ps) => ps.id !== personalScheduleId,
           );
       });
     },
@@ -85,11 +85,7 @@ export const createPersonalScheduleSlice: StateCreator<
     ) => {
       const targetPersonalScheduleIndex = get().personalSchedules[
         semester
-      ].findIndex(
-        (personalSchedule) =>
-          personalSchedule.personal_schedule_id ===
-          newSchedule.personal_schedule_id,
-      );
+      ].findIndex((personalSchedule) => personalSchedule.id === newSchedule.id);
 
       if (targetPersonalScheduleIndex !== -1) {
         set((state) => {
@@ -100,7 +96,7 @@ export const createPersonalScheduleSlice: StateCreator<
         });
       } else {
         console.error(
-          `${semester}-${newSchedule.personal_schedule_id}: 개인 스케줄 업데이트 에러`,
+          `${semester}-${newSchedule.id}: 개인 스케줄 업데이트 에러`,
         );
       }
     },

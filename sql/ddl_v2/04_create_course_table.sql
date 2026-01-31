@@ -1,0 +1,7 @@
+CREATE TABLE course (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    code VARCHAR(20) NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    credit INT NOT NULL,
+    CONSTRAINT uk_course_code UNIQUE(code)
+);

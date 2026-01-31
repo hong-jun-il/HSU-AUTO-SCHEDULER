@@ -14,7 +14,6 @@ class AllSolutionPrinter:
             selected_courses = solution.selected_courses
             total_credit = solution.total_credit
             total_course_gap = solution.total_course_gap
-
             total_online_course_count = solution.total_online_course_count
 
             # 요일별로 묶기
@@ -26,15 +25,15 @@ class AllSolutionPrinter:
             for day in courses_by_day:
                 print(f"{WeekdayEnum(day).value}: ")
                 for course_in_cur_day in courses_by_day[day]:
-                    cur_course_name = course_in_cur_day.course_name
-                    cur_course_completion_types = "/".join(
-                        course_in_cur_day.completion_types
+                    cur_course_name = course_in_cur_day.name
+                    cur_course_requirement_types = "/".join(
+                        course_in_cur_day.requirement_types
                     )
                     cur_course_delivery_method = course_in_cur_day.delivery_method
                     cur_course_credit = course_in_cur_day.credit
                     cur_course_offline_schedules = course_in_cur_day.offline_schedules
                     print(
-                        f"{cur_course_name}({cur_course_completion_types}, {cur_course_delivery_method}, {cur_course_credit}학점)",
+                        f"{cur_course_name}({cur_course_requirement_types}, {cur_course_delivery_method}, {cur_course_credit}학점)",
                         end=" ",
                     )
 

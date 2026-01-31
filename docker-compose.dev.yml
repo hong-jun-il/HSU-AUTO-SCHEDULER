@@ -9,7 +9,7 @@ services:
       MYSQL_USER: ${DB_USERNAME}
       MYSQL_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "${DB_HOST_PORT}:3306"
+      - "${DB_PORT}:3306"
     volumes:
       # MySQL의 실제 데이터 파일은 여기에 저장됨
       - hsu_auto_scheduler_mysql_data:/var/lib/mysql
@@ -19,34 +19,5 @@ services:
 
       # SQL 파일 접근용
       - ./sql:/sql
-  nestjs:
-    build:
-      context: ./hsu-auto-scheduler-be
-      dockerfile: dockerfile.dev
-    ports:
-      - ${NESTJS_PORT}:5000
-    environment:
-      PORT: ${NESTJS_PORT}
-      ENV: ${ENV}
-      DB_TYPE: ${DB_TYPE}
-      DB_HOST: ${DB_HOST}
-      DB_PORT: ${DB_PORT}
-      DB_USERNAME: ${DB_USERNAME}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_DATABASE: ${DB_DATABASE}
-      FAST_API_BASE_URL: ${FAST_API_BASE_URL}
-      # dev: 소스코드 변경 시 리로드 설정
-    volumes:
-      - ./hsu-auto-scheduler-be:/usr/src/app
-      - /usr/src/app/node_modules
-  fastapi:
-    build:
-      context: ./ortools-scheduler
-      dockerfile: dockerfile.dev
-    ports:
-      - ${FASTAPI_PORT}:80
-    volumes:
-      - ./ortools-scheduler:/app
-
 volumes:
   hsu_auto_scheduler_mysql_data:

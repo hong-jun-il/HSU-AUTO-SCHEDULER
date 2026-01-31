@@ -25,7 +25,7 @@ export default function useUnmarkCourseSchedule() {
     if (!shouldDelete) return;
 
     const targetCourse = selectedCourses[currentSemester].find(
-      (course) => course.course_id === courseId,
+      (course) => course.id === courseId,
     );
 
     if (targetCourse) {

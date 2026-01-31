@@ -3,11 +3,11 @@
   일정 추가, 삭제, 제출, 수정 시 초기화 세팅을 담당
 */
 
+import { OfflineScheduleType } from "@/types/schemas/offline_schedule.schema";
 import {
   createOfflineScheduleDefaultValue,
-  OfflineScheduleType,
-} from "@/types/schemas/OfflineSchedule.schema";
-import { PersonalScheduleType } from "@/types/schemas/PersonalSchedule.schema";
+  PersonalScheduleType,
+} from "@/types/schemas/personal_schedule.schema";
 import { SubmitHandler, useFieldArray, useFormContext } from "react-hook-form";
 import useMarkPersonalSchedule from "./useMarkPersonalSchedule";
 import { useTimetableStore } from "@/store/timetable/timetableStore";

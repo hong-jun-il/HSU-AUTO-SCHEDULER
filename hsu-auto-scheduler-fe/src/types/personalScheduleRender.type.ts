@@ -1,5 +1,5 @@
 import { WeekdayEnum } from "@/enums/weekday.enum";
-import { OfflineScheduleType } from "./schemas/OfflineSchedule.schema";
+import { OfflineScheduleType } from "./schemas/offline_schedule.schema";
 
 export type PersonalSchedulesByDayType = Partial<
   Record<WeekdayEnum, PersonalScheduleRenderInfoType[]>

@@ -1,9 +1,9 @@
-import { GroupedOfflineScheduleByDay } from "@/types/groupedOfflineScheduleByDay.type";
-import { OfflineScheduleType } from "@/types/schemas/OfflineSchedule.schema";
+import { GroupedScheduleByDayType } from "@/types/grouped_schedule_by_day.type";
+import { OfflineScheduleType } from "@/types/schemas/offline_schedule.schema";
 
 export default function groupOfflineScheduleByDay(
   offlineSchedules: OfflineScheduleType[],
-): GroupedOfflineScheduleByDay {
+): GroupedScheduleByDayType {
   return offlineSchedules.reduce((acc, cur) => {
     const newOfflineSchedulesInCurDay = acc[cur.day] ?? [];
 
@@ -12,5 +12,5 @@ export default function groupOfflineScheduleByDay(
     acc[cur.day] = newOfflineSchedulesInCurDay;
 
     return acc;
-  }, {} as GroupedOfflineScheduleByDay);
+  }, {} as GroupedScheduleByDayType);
 }

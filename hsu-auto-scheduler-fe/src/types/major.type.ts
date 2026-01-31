@@ -1,4 +1,5 @@
 export type MajorType = {
-  major_code: string;
-  major_name: string;
+  id: string;
+  code: string;
+  name: string;
 };

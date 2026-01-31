@@ -1,11 +1,20 @@
+import { OmitType } from '@nestjs/mapped-types';
 import { Type } from 'class-transformer';
 import { IsArray, IsNotEmpty, IsString, ValidateNested } from 'class-validator';
-import { OfflineScheduleDto } from 'src/common/dto/04_offline_schedule.dto';
+import { OfflineScheduleWithIdDto } from 'src/common/dto/offline_schedule.dto';
+
+class PersnalOfflineScheduleDto extends OmitType(OfflineScheduleWithIdDto, [
+  'lecture_id',
+  'place',
+]) {
+  @IsString()
+  place: string;
+}
 
 export class PersonalScheduleDto {
   @IsString()
   @IsNotEmpty()
-  personal_schedule_id: string;
+  id: string;
 
   @IsString()
   @IsNotEmpty()
@@ -13,6 +22,6 @@ export class PersonalScheduleDto {
 
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => OfflineScheduleDto)
-  offline_schedules: OfflineScheduleDto[];
+  @Type(() => PersnalOfflineScheduleDto)
+  offline_schedules: PersnalOfflineScheduleDto[];
 }

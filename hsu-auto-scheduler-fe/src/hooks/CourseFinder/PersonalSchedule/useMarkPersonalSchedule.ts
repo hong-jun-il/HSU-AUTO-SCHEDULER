@@ -1,5 +1,5 @@
 import { useTimetableStore } from "@/store/timetable/timetableStore";
-import { PersonalScheduleType } from "@/types/schemas/PersonalSchedule.schema";
+import { PersonalScheduleType } from "@/types/schemas/personal_schedule.schema";
 import { useShallow } from "zustand/shallow";
 import { WeekdayEnum, WeekdayKorMap } from "@/enums/weekday.enum";
 import isOverlapPersonalScheduleTimes from "@/utils/isOverlapPersonalScheduleTimes";

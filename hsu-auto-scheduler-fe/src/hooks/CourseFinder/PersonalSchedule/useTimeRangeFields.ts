@@ -1,4 +1,4 @@
-import { PersonalScheduleType } from "@/types/schemas/PersonalSchedule.schema";
+import { PersonalScheduleType } from "@/types/schemas/personal_schedule.schema";
 import { useFormContext } from "react-hook-form";
 
 export default function useTimeRangeFields(index: number) {

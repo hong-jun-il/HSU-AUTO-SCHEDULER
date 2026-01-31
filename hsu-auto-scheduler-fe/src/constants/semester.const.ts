@@ -1,0 +1,2 @@
+export const DEFAULT_SEMESTER =
+  process.env.NEXT_PUBLIC_DEFAULT_SEMESTER ?? "2026-1";

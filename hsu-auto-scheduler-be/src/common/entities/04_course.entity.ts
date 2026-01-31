@@ -1,52 +1,31 @@
 import {
   Column,
   Entity,
-  JoinColumn,
-  ManyToOne,
   OneToMany,
-  PrimaryColumn,
+  PrimaryGeneratedColumn,
+  Unique,
 } from 'typeorm';
-import { OfflineScheduleEntity } from './06_offlineSchedule.entity';
-import { SemesterEntity } from './01_semester.entity';
-import { MajorCourseEntity } from './07_major_course.entity';
-import { ClassSectionEntity } from './05_classSection.entity';
+import { MajorCourseEntity } from './05_major_course.entity';
+import { LectureEntity } from './06_lecture.entity';
 
 @Entity('course')
+@Unique('uk_course_code', ['code'])
 export class CourseEntity {
-  @PrimaryColumn()
-  course_code: string;
+  @PrimaryGeneratedColumn({ type: 'bigint', unsigned: true })
+  id: string;
 
-  @PrimaryColumn()
-  semester_id: string;
+  @Column({ type: 'varchar', length: 20 })
+  code: string;
 
-  @Column()
-  course_name: string;
+  @Column({ type: 'varchar', length: 255 })
+  name: string;
 
-  @Column()
-  completion_type: string;
-
-  @Column()
+  @Column({ type: 'int' })
   credit: number;
 
-  @Column({ length: 30 })
-  grade: string;
+  @OneToMany(() => MajorCourseEntity, (mc) => mc.course)
+  major_course: MajorCourseEntity[];
 
-  @Column({ type: 'int', nullable: true })
-  grade_limit: number | null;
-
-  @ManyToOne(() => SemesterEntity, (semester) => semester.courses)
-  @JoinColumn({ name: 'semester_id' })
-  semester: SemesterEntity;
-
-  @OneToMany(() => ClassSectionEntity, (class_section) => class_section.course)
-  class_sections: ClassSectionEntity[];
-
-  @OneToMany(
-    () => OfflineScheduleEntity,
-    (offline_schedule) => offline_schedule.course,
-  )
-  offline_schedules: OfflineScheduleEntity[];
-
-  @OneToMany(() => MajorCourseEntity, (major_course) => major_course.course)
-  major_courses: MajorCourseEntity[];
+  @OneToMany(() => LectureEntity, (lecture) => lecture.course)
+  lectures: LectureEntity[];
 }

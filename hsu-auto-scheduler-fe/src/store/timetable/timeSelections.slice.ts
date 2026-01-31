@@ -1,4 +1,4 @@
-import { SLOT_COUNT_PER_DAY } from "@/constants/SlotCoutPerDay";
+import { DAY_BLOCK_LENGTH } from "@/constants/day-block-length.const";
 import { WeekdayEnum } from "@/enums/weekday.enum";
 import { StateCreator } from "zustand";
 import { combine } from "zustand/middleware";
@@ -47,7 +47,7 @@ export const createTimeSelectionSlice: StateCreator<
         set((state) => {
           state.timeSelections[semester] = Object.values(WeekdayEnum).reduce(
             (acc, day) => {
-              acc[day] = Array(SLOT_COUNT_PER_DAY).fill(0);
+              acc[day] = Array(DAY_BLOCK_LENGTH).fill(0);
               return acc;
             },
             {} as Record<WeekdayEnum, number[]>,
@@ -93,7 +93,7 @@ export const createTimeSelectionSlice: StateCreator<
       set((state) => {
         state.timeSelections[semester] = Object.values(WeekdayEnum).reduce(
           (acc, day) => {
-            acc[day] = Array(SLOT_COUNT_PER_DAY).fill(0);
+            acc[day] = Array(DAY_BLOCK_LENGTH).fill(0);
             return acc;
           },
           {} as Record<WeekdayEnum, number[]>,
