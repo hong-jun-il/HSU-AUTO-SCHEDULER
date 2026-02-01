@@ -1,9 +1,9 @@
 import { DayOrNightEnum } from "@/enums/day_or_night.enum";
 import { WeekdayEnum } from "@/enums/weekday.enum";
 import z from "zod";
-import { courseSchema } from "./course.schema";
 import { personalScheduleSchema } from "./personal_schedule.schema";
 import { DEFAULT_SEMESTER } from "@/constants/semester.const";
+import { courseSchema } from "./course.schema";
 
 export const baseFilterSchema = z.object({
   semester_id: z.string().min(1, { error: "semester_id는 필수 필드입니다!" }),
