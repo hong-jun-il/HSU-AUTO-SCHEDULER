@@ -1,5 +1,7 @@
 # 📅 HSU-AUTO-SCHEDULER
 
+## 사이트 URL: https://hsu-auto-scheduler.vercel.app/
+
 사용자의 제약 조건을 기반으로,
 최적의 대학 시간표 조합을 추천하는 웹 서비스입니다.
 
