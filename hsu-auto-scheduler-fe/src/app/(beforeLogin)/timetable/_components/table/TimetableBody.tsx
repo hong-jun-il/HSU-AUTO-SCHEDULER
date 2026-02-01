@@ -69,7 +69,7 @@ export default function TimeTableBody() {
     if (!hoveredCourse) return undefined;
 
     const baseInfo: CourseTimetableRenderType = {
-      id: hoveredCourse.course_id,
+      id: hoveredCourse.id,
       name: hoveredCourse.name,
       section: hoveredCourse.section,
       professors: hoveredCourse.professors,
