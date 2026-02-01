@@ -1,18 +1,18 @@
 services:
-  # nginx:
-  #   image: nginx:1.25-alpine
-  #   restart: always
-  #   ports:
-  #     - "80:80"
-  #     - "443:443"
-  #   volumes:
-  #     - ./nginx:/etc/nginx/conf.d:ro
-  #     - ./nginx/ssl:/etc/letsencrypt:ro
-  #     - ./data/certbot:/var/www/certbot:ro
-  #   networks:
-  #     - public
-  #   depends_on:
-  #     - nestjs
+  nginx:
+    image: nginx:1.25-alpine
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx:/etc/nginx/conf.d:ro
+      - ./nginx/ssl/certificate.crt:/etc/nginx/ssl/certificate.crt:ro
+      - ./nginx/ssl/private.key:/etc/nginx/ssl/private.key:ro
+    networks:
+      - public
+    depends_on:
+      - nestjs
   mysql:
     image: mysql:8.4
     container_name: mysql-db
