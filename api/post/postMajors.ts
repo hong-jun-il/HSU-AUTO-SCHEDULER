@@ -1,6 +1,6 @@
 import { MajorDBType, MajorFileType } from "../../type/major.type";
 
-export async function postMajors(majors: MajorFileType[]) {
+export async function postMajors(semesterId: string, majors: MajorFileType[]) {
   const majorData: MajorDBType[] = majors.map((major) => ({
     code: major.major_code,
     name: major.major_name,
@@ -11,7 +11,10 @@ export async function postMajors(majors: MajorFileType[]) {
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(majorData),
+    body: JSON.stringify({
+      semesterId,
+      majors: majorData,
+    }),
   });
 
   if (!res.ok) {

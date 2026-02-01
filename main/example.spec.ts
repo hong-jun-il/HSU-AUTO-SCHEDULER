@@ -13,9 +13,13 @@ import parseHSUInfoCoursesFromXML from "../utils/parseXML/parseHSUInfoCoursesFro
 import { EverytimeCourseType } from "../type/course.type";
 import { HSUInfoXMLCourseType } from "../type/HSUInfo/HSUInfoXMLCourse.type";
 import overrideCourseFile from "../utils/saveJson/overrideCourseFile";
+import { config } from "dotenv";
+
+config();
 
 const TEST_FUNC_TIME_OUT = 1000 * 60 * 60;
 const semester = TARGET_SEMESTER;
+const etsid = process.env.AUTH;
 
 test.use({
   locale: "ko-KR",
@@ -39,8 +43,7 @@ test("에브리타임: 전공 및 강의 긁어오기", async ({ page, context }
   await context.addCookies([
     {
       name: "etsid",
-      value:
-        "s%3A_9Vg6omAlTWKfgETULCabDehw7b-CcyC.jwR9eAvDCPr6aUdBPcJQHHBaI%2FGrvDa8v70Liorf5YA",
+      value: etsid,
       domain: ".everytime.kr",
       path: "/",
       httpOnly: true,

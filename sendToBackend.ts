@@ -17,9 +17,10 @@ async function sendToBackend() {
     await fs.readFile(`${majorsDir}/majors.json`, "utf-8"),
   );
 
-  const postSemesterRes = await postSemester({ year, term });
-  console.log(postSemesterRes);
-  const postMajorRes = await postMajors(majors);
+  const { data } = await postSemester({ year, term });
+  const semesterId = data.id;
+
+  const postMajorRes = await postMajors(semesterId, majors);
   console.log(postMajorRes);
 
   for (const index in majors) {
@@ -33,8 +34,7 @@ async function sendToBackend() {
     );
 
     const postCourseRes = await postCourses({
-      year,
-      term,
+      semesterId,
       code,
       name,
       courses,

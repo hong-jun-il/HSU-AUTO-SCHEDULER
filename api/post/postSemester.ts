@@ -1,6 +1,10 @@
+import { ResponseType } from "../../type/response.type";
 import { SemesterType } from "../../type/semester.type";
 
-export async function postSemester({ year, term }: SemesterType) {
+export async function postSemester({
+  year,
+  term,
+}: SemesterType): Promise<ResponseType<SemesterType & { id: string }>> {
   const res = await fetch(`${process.env.BASE_URL}/crawler/save-semester`, {
     method: "POST",
     headers: {

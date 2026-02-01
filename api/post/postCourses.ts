@@ -7,16 +7,14 @@ import { CourseDBType, OverridedCourseType } from "../../type/course.type";
 import parseOfflineSchedules from "../../utils/parseOfflineSchedules";
 
 type PostCourseType = {
-  year: number;
-  term: number;
+  semesterId: string;
   code: string;
   name: string;
   courses: OverridedCourseType[];
 };
 
 export default async function postCourses({
-  year,
-  term,
+  semesterId,
   code,
   name,
   courses,
@@ -68,10 +66,7 @@ export default async function postCourses({
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      semester: {
-        year,
-        term,
-      },
+      semesterId,
       major: {
         code,
         name,
@@ -82,7 +77,7 @@ export default async function postCourses({
 
   if (!res.ok) {
     throw new Error(
-      `Post Course: ${year}년 ${term}학기 전공코드${code}: ${name} HTTP ERROR!`,
+      `Post Course: 전공코드${code}: ${name} 강의 저장 HTTP ERROR!`,
     );
   }
 
