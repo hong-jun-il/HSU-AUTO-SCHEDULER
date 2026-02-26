@@ -1,6 +1,8 @@
 # 📅 HSU-AUTO-SCHEDULER
 
-## 사이트 URL: https://hsu-auto-scheduler.vercel.app/
+## 사이트 URL(서버 중단): https://hsu-auto-scheduler.vercel.app/
+1차 배포: 2025-08-18 ~ 2025-08-27
+2차 배포: 2026-02-01 ~ 2026-02-20
 
 사용자의 제약 조건을 기반으로,
 최적의 대학 시간표 조합을 추천하는 웹 서비스입니다.
