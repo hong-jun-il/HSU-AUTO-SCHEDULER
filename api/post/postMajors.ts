@@ -1,11 +1,6 @@
-import { MajorDBType, MajorFileType } from "../../type/major.type";
+import { MajorDBType } from "../../type/major.type";
 
-export async function postMajors(semesterId: string, majors: MajorFileType[]) {
-  const majorData: MajorDBType[] = majors.map((major) => ({
-    code: major.major_code,
-    name: major.major_name,
-  }));
-
+export async function postMajors(semesterId: string, majors: MajorDBType[]) {
   const res = await fetch(`${process.env.BASE_URL}/crawler/save-majors`, {
     method: "POST",
     headers: {
@@ -13,12 +8,12 @@ export async function postMajors(semesterId: string, majors: MajorFileType[]) {
     },
     body: JSON.stringify({
       semesterId,
-      majors: majorData,
+      majors,
     }),
   });
 
   if (!res.ok) {
-    throw new Error(`Post Majors HTTP ERROR!`);
+    throw new Error(`Post Majors HTTP ERROR! (${res.status})`);
   }
 
   return res.json();

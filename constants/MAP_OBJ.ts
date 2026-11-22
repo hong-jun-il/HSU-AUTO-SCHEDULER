@@ -11,12 +11,20 @@ export const REQUIREMENT_TYPE_MAP = {
   일교: RequirementTypeEnum.GENERAL_ELECTIVE,
   일선: RequirementTypeEnum.FREE_ELECTIVE,
   MD전선: RequirementTypeEnum.MD_MAJOR_ELECTIVE,
+  복전선: RequirementTypeEnum.DOUBLE_MAJOR_ELECTIVE,
 };
 
 export const DELIVERY_METHOD_MAP = {
   BL: DeliveryMethodEnum.BLENDED,
   "온라인100%": DeliveryMethodEnum.ONLINE,
   대면수업: DeliveryMethodEnum.FACE_TO_FACE,
+};
+
+// 종정시 juya 값
+export const JUYA_MAP = {
+  주: DayOrNightEnum.DAY,
+  야: DayOrNightEnum.NIGHT,
+  합: DayOrNightEnum.BOTH,
 };
 
 export const DAY_OR_NIGHT_MAP = {

@@ -7,5 +7,6 @@ node_modules/
 /playwright/.cache/
 
 /20*
+/hsuinfo-*.json
 
 .env*
