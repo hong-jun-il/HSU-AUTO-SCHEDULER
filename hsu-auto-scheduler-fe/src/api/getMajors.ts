@@ -5,7 +5,7 @@ export default async function getMajors(
   semester: string,
 ): Promise<ResponseType<MajorType[]>> {
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_BASE_URL}/schedule/get-majors?semesterId=${semester}`,
+    `${process.env.NEXT_PUBLIC_BASE_URL}/api/semesters/${semester}/majors`,
     {
       method: "GET",
       headers: {

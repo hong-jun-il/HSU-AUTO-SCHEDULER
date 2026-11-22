@@ -25,25 +25,32 @@ export default function useGetCourses(filters: CourseFilterType) {
     }): Promise<
       ResponseType<{
         courses: CourseType[];
-        totalCount: number;
+        total_count: number;
+        has_next: boolean;
       }>
     > => {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/schedule/get-courses`,
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/semesters/${filters.semester_id}/lectures/search`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(
-            {
-              currentPage: pageParam,
-              pagePerLimit: COURSES_PER_PAGE,
-              filters,
-            },
-            null,
-            0,
-          ),
+          body: JSON.stringify({
+            page: pageParam,
+            size: COURSES_PER_PAGE,
+            major_id: filters.major_id || null,
+            search: filters.search || null,
+            grade: filters.grade ? Number(filters.grade) : null,
+            day_or_night: filters.day_or_night || null,
+            no_class_days: filters.no_class_days,
+            has_lunch_break: filters.has_lunch_break,
+            // 고른 강의는 분반 id 만 보낸다. 강의 정보는 서버가 DB 에서 읽는다
+            selected_lecture_ids: filters.selected_courses.map(
+              (course) => course.id,
+            ),
+            personal_schedules: filters.personal_schedules,
+          }),
         },
       );
 
@@ -55,9 +62,7 @@ export default function useGetCourses(filters: CourseFilterType) {
     },
     initialPageParam: 1,
     getNextPageParam: (lastPage, _, lastPageParam) => {
-      return lastPage.data.totalCount < COURSES_PER_PAGE
-        ? undefined
-        : lastPageParam + 1;
+      return lastPage.data.has_next ? lastPageParam + 1 : undefined;
     },
     select: (data) => ({
       pages: data.pages.flatMap((page) => page.data.courses),

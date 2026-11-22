@@ -3,7 +3,7 @@ import { SemesterType } from "@/types/semester.type";
 
 export async function getSemesters(): Promise<ResponseType<SemesterType[]>> {
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_BASE_URL}/schedule/get-semesters`,
+    `${process.env.NEXT_PUBLIC_BASE_URL}/api/semesters`,
     {
       method: "GET",
       headers: {

@@ -45,25 +45,25 @@ export default function useGetCPSATResults() {
       }>
     > => {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/schedule/get-cpsat`,
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/semesters/${values.semester_id}/timetables`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
+          // 같은 조건으로 페이지만 바꿔 보내면 서버가 첫 풀이 결과를 재사용한다
           body: JSON.stringify({
-            currentPage: pageParam,
-            pagePerLimit: CPSAT_RESULT_PER_PAGE,
-            filters: {
-              semester_id: values.semester_id,
-              major_id: values.major_id,
-              grade: values.grade,
-              day_or_night: values.day_or_night,
-              no_class_days: values.no_class_days,
-              has_lunch_break: values.has_lunch_break,
-              personal_schedules: values.personal_schedules,
-              selected_courses: values.selected_courses,
-            },
+            page: pageParam,
+            size: CPSAT_RESULT_PER_PAGE,
+            major_id: values.major_id,
+            grade: Number(values.grade),
+            day_or_night: values.day_or_night,
+            no_class_days: values.no_class_days,
+            has_lunch_break: values.has_lunch_break,
+            personal_schedules: values.personal_schedules,
+            selected_lecture_ids: values.selected_courses.map(
+              (course) => course.id,
+            ),
             constraints: {
               max_credit: values.max_credit,
               major_basic: values.major_basic,
