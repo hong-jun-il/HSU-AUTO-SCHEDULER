@@ -7,6 +7,7 @@ export enum RequirementTypeEnum {
   GENERAL_ELECTIVE = "GENERAL_ELECTIVE",
   FREE_ELECTIVE = "FREE_ELECTIVE",
   MD_MAJOR_ELECTIVE = "MD_MAJOR_ELECTIVE",
+  DOUBLE_MAJOR_ELECTIVE = "DOUBLE_MAJOR_ELECTIVE",
 }
 
 export const RequirementTypeKorMap: Record<RequirementTypeEnum, string> = {
@@ -18,4 +19,5 @@ export const RequirementTypeKorMap: Record<RequirementTypeEnum, string> = {
   [RequirementTypeEnum.GENERAL_ELECTIVE]: "일교",
   [RequirementTypeEnum.FREE_ELECTIVE]: "일선",
   [RequirementTypeEnum.MD_MAJOR_ELECTIVE]: "MD전선",
+  [RequirementTypeEnum.DOUBLE_MAJOR_ELECTIVE]: "복전선",
 };

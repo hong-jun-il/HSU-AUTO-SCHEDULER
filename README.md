@@ -50,3 +50,36 @@
 ## 📘 Related Posts
 
 Velog: https://velog.io/@grt1022rt/hsu-auto-scheduler-prologue
+
+## 📁 Project Structure
+
+| 폴더 | 설명 |
+| --- | --- |
+| `hsu-auto-scheduler-fe` | Next.js 프론트엔드 |
+| `hsu-auto-scheduler-be` | NestJS 메인 API 서버 |
+| `ortools-scheduler` | FastAPI + OR-Tools 시간표 추천 엔진 |
+| `hsu-auto-scheduler-scraper` | 종정시 시간표 수집·변환·전송 스크립트 ([사용법](hsu-auto-scheduler-scraper/README.md)) |
+| `sql` | DB 초기화 스크립트(`init.sql`), DDL, 마이그레이션 |
+| `nginx` | 리버스 프록시 설정 |
+
+## 🤝 Commit Convention
+
+커밋 메시지는 반드시 아래 접두어 중 하나로 시작합니다.
+
+```
+<접두어>: <변경 내용 요약>
+```
+
+| 접두어 | 용도 |
+| --- | --- |
+| `feat` | 새 기능 |
+| `fix` | 버그 수정 |
+| `refactor` | 동작 변경 없는 코드 구조 개선 |
+| `chore` | 설정, 빌드, 의존성, 파일 이동 등 |
+| `docs` | 문서 수정 |
+| `style` | 포맷팅 등 로직과 무관한 변경 |
+| `test` | 테스트 추가·수정 |
+
+예: `feat: 이수구분 복전선 추가`, `fix: nginx ssl 인증서 경로 수정`
+
+브랜치는 `main`에서 `<접두어>/<작업명>` 형태로 만들어 작업합니다. (예: `feat/merge-scraper`)

@@ -27,6 +27,7 @@ class RequirementTypeEnum(str, Enum):
     GENERAL_ELECTIVE = "GENERAL_ELECTIVE"
     FREE_ELECTIVE = "FREE_ELECTIVE"
     MD_MAJOR_ELECTIVE = "MD_MAJOR_ELECTIVE"
+    DOUBLE_MAJOR_ELECTIVE = "DOUBLE_MAJOR_ELECTIVE"
 
 
 class DeliveryMethodEnum(str, Enum):
