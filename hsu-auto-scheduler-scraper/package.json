@@ -1,17 +1,18 @@
 {
-  "description": "",
+  "name": "hsu-auto-scheduler-scraper",
+  "private": true,
+  "description": "종정시 시간표 수집·변환·전송",
   "scripts": {
     "scrape": "ts-node -r dotenv/config scripts/scrape.ts",
-    "send": "ts-node -r dotenv/config sendToBackend.ts"
+    "send": "ts-node -r dotenv/config scripts/send.ts",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "dotenv": "^17.2.1",
-    "fast-xml-parser": "^5.2.5",
-    "uuid": "^11.1.0"
+    "dotenv": "^17.2.1"
   },
   "devDependencies": {
-    "@playwright/test": "^1.54.2",
     "@types/node": "^24.3.0",
-    "ts-node": "^10.9.2"
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
   }
 }

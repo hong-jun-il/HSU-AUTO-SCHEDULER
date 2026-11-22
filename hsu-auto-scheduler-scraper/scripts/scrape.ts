@@ -7,7 +7,7 @@
  * 1. Chrome으로 종정시 시간표 페이지를 #export=<학기> 를 붙여 연다.
  * 2. Tampermonkey 스크립트(console/hsuinfo-export.user.js)가 그 학기를 받아 다운로드한다.
  * 3. 다운로드 폴더에 새 hsuinfo-<학기>*.json 이 생기면 data/ 로 옮긴다.
- * 4. sendToBackend 로 변환·전송한다.
+ * 4. scripts/send.ts 로 변환·전송한다.
  *
  * 환경변수: DOWNLOAD_DIR (기본 ~/Downloads), SCRAPE_TIMEOUT_MIN (기본 15)
  */
@@ -16,12 +16,11 @@ import os from "os";
 import path from "path";
 import { execFile } from "child_process";
 import { promisify } from "util";
-import { sendFile } from "../sendToBackend";
+import { dataFileFor, DATA_DIR, sendFile } from "./send";
 
 const PAGE_URL = "https://info.hansung.ac.kr/jsp/haksa/siganpyo_aui.jsp";
 const DOWNLOAD_DIR = process.env.DOWNLOAD_DIR || path.join(os.homedir(), "Downloads");
 const TIMEOUT_MS = Number(process.env.SCRAPE_TIMEOUT_MIN || 15) * 60_000;
-const DATA_DIR = path.resolve(__dirname, "../data");
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 // 다운로드 폴더에서 startedAt 이후 생긴 hsuinfo-<학기>.json (또는 " (1)" 등이 붙은 것)을 기다린다
@@ -72,12 +71,12 @@ async function main() {
   const downloaded = await waitForDownload(semester, startedAt);
 
   await fs.mkdir(DATA_DIR, { recursive: true });
-  const target = path.join(DATA_DIR, `hsuinfo-${semester}.json`);
+  const target = dataFileFor(semester);
   await fs.copyFile(downloaded, target);
   await fs.unlink(downloaded);
   console.log(`받은 파일을 옮겼어요: ${target}`);
 
-  await sendFile(target, { dryRun });
+  await sendFile(target, { dryRun, expectedSemester: semester });
 }
 
 main().catch((err) => {
