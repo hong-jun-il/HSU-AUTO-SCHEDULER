@@ -8,7 +8,8 @@ CREATE TABLE major_course (
         'REQUIRED_GENERAL_ELECTIVE',    
         'GENERAL_ELECTIVE',    
         'FREE_ELECTIVE',       
-        'MD_MAJOR_ELECTIVE'
+        'MD_MAJOR_ELECTIVE',
+        'DOUBLE_MAJOR_ELECTIVE'
     ) NOT NULL,
     grade INT NOT NULL,
     grade_limit INT,
