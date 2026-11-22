@@ -1,0 +1,16 @@
+{
+  "description": "",
+  "scripts": {
+    "send": "ts-node -r dotenv/config sendToBackend.ts"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.1",
+    "fast-xml-parser": "^5.2.5",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.54.2",
+    "@types/node": "^24.3.0",
+    "ts-node": "^10.9.2"
+  }
+}

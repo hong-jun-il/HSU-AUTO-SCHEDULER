@@ -1,0 +1,22 @@
+export type HSUInfoXMLCourseType = {
+  kwamokcode: string;
+  kwamokname: string;
+  isugubun: string;
+  hakjum: number;
+  juya: string;
+  bunban: string;
+  haknean: string;
+  haknean_limit: number;
+  prof: string;
+  classroom: string;
+  plan: string;
+  c12: number;
+  c13: number;
+  suup_pyunga: string;
+  bigo: string;
+  kcomment: string;
+  ekname: string;
+  gwamokgun: string;
+  kwamokgubun: string;
+  kwamok_gubun: string;
+};
