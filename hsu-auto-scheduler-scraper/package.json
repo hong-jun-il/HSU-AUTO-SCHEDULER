@@ -1,6 +1,7 @@
 {
   "description": "",
   "scripts": {
+    "scrape": "ts-node -r dotenv/config scripts/scrape.ts",
     "send": "ts-node -r dotenv/config sendToBackend.ts"
   },
   "dependencies": {

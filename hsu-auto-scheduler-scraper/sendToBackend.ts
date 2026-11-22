@@ -36,15 +36,8 @@ function buildAll(data: HSUInfoExport) {
   return { majors, warnings, errors };
 }
 
-async function main() {
-  const args = process.argv.slice(2);
-  const dryRun = args.includes("--dry-run");
-  const file = args.find((a) => !a.startsWith("--"));
-  if (!file) {
-    console.error("사용법: npm run send -- <hsuinfo-학기.json> [--dry-run]");
-    process.exit(1);
-  }
-
+// 내보내기 파일 하나를 변환해 전송한다. 실패하면 예외를 던진다.
+export async function sendFile(file: string, { dryRun = false } = {}) {
   const data: HSUInfoExport = JSON.parse(await fs.readFile(path.resolve(file), "utf-8"));
   const [year, term] = data.semester.split("-").map(Number);
   if (!year || !term) throw new Error(`파일의 semester 값이 이상해요: "${data.semester}"`);
@@ -54,8 +47,7 @@ async function main() {
   console.log(`${data.semester} (수집 ${data.fetchedAt}): 전공 ${majors.length}개, 강의 ${total}개 변환`);
   if (warnings.length) console.warn(`경고 ${warnings.length}건:\n  ${warnings.join("\n  ")}`);
   if (errors.length) {
-    console.error(`변환 실패 ${errors.length}건 — 전송하지 않아요:\n  ${errors.join("\n  ")}`);
-    process.exit(1);
+    throw new Error(`변환 실패 ${errors.length}건 — 전송하지 않아요:\n  ${errors.join("\n  ")}`);
   }
 
   if (dryRun) {
@@ -81,13 +73,21 @@ async function main() {
     }
   }
   if (failed.length) {
-    console.error(`전송 실패 ${failed.length}건:\n  ${failed.join("\n  ")}`);
-    process.exit(1);
+    throw new Error(`전송 실패 ${failed.length}건:\n  ${failed.join("\n  ")}`);
   }
   console.log("전송 완료");
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+// npm run send -- <파일> [--dry-run] 으로 직접 실행했을 때
+if (require.main === module) {
+  const args = process.argv.slice(2);
+  const file = args.find((a) => !a.startsWith("--"));
+  if (!file) {
+    console.error("사용법: npm run send -- <hsuinfo-학기.json> [--dry-run]");
+    process.exit(1);
+  }
+  sendFile(file, { dryRun: args.includes("--dry-run") }).catch((err) => {
+    console.error(err instanceof Error ? err.message : err);
+    process.exit(1);
+  });
+}
