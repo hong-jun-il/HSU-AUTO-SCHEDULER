@@ -13,7 +13,7 @@ services:
     volumes:
       # PostgreSQL 실제 데이터 파일
       # 테이블은 백엔드(Spring)가 뜰 때 Flyway 가 만든다
-      # (hsu-auto-scheduler-api/src/main/resources/db/migration)
+      # (hsu-auto-scheduler-be/src/main/resources/db/migration)
       - hsu_auto_scheduler_pg_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]

@@ -56,10 +56,10 @@ Velog: https://velog.io/@grt1022rt/hsu-auto-scheduler-prologue
 | 폴더 | 설명 |
 | --- | --- |
 | `hsu-auto-scheduler-fe` | Next.js 프론트엔드 |
-| `hsu-auto-scheduler-api` | Kotlin + Spring Boot 메인 API 서버, PostgreSQL·Flyway ([사용법](hsu-auto-scheduler-api/README.md)) |
+| `hsu-auto-scheduler-be` | Kotlin + Spring Boot 메인 API 서버, PostgreSQL·Flyway ([사용법](hsu-auto-scheduler-be/README.md)) |
 | `ortools-scheduler` | FastAPI + OR-Tools 시간표 추천 엔진 |
 | `hsu-auto-scheduler-scraper` | 종정시 시간표 수집·변환·전송 (`npm run scrape -- 2026-2`) ([사용법](hsu-auto-scheduler-scraper/README.md)) |
-| `sql` | 스키마 설계 문서(`ddl_v3/schema.dbml`). 실제 스키마는 api 의 Flyway 마이그레이션이 만든다. `ddl_v1`·`ddl_v2`·`init.sql` 은 MySQL 시절 기록 |
+| `sql` | 스키마 설계 문서(`ddl_v3/schema.dbml`). 실제 스키마는 `hsu-auto-scheduler-be` 의 Flyway 마이그레이션이 만든다. `ddl_v1`·`ddl_v2`·`init.sql` 은 MySQL 시절 기록 |
 | `nginx` | 리버스 프록시 설정 |
 
 ## 🚀 Deploy

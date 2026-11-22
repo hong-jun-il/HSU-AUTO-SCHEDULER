@@ -1,6 +1,6 @@
-# hsu-auto-scheduler-api
+# hsu-auto-scheduler-be
 
-Kotlin + Spring Boot 백엔드 (`hsu-auto-scheduler-be` 를 대체할 예정).
+Kotlin + Spring Boot 백엔드 (NestJS 백엔드를 대체).
 
 - Kotlin 2.3, Spring Boot 4.1, JDK 25, PostgreSQL 17
 - 스키마: Flyway (`src/main/resources/db/migration`). 설계 문서는 [`sql/ddl_v3/schema.dbml`](../sql/ddl_v3/schema.dbml)

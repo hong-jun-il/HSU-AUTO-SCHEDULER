@@ -44,7 +44,7 @@ services:
 
   api:
     build:
-      context: ./hsu-auto-scheduler-api
+      context: ./hsu-auto-scheduler-be
       dockerfile: Dockerfile
     restart: always
     ports:

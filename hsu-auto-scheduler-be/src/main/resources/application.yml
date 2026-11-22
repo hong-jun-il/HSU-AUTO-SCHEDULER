@@ -1,6 +1,6 @@
 spring:
   application:
-    name: hsu-auto-scheduler-api
+    name: hsu-auto-scheduler-be
 
   datasource:
     # 기본값은 루트 docker-compose.dev.yml 의 postgres 서비스를 가리킨다. 운영에서는 환경변수로 덮어쓴다
