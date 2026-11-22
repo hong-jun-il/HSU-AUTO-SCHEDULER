@@ -70,7 +70,7 @@ docker compose -f docker-compose.prod.yml up -d --build
 
 루트 `.env` 에 넣을 값: `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`, `ADMIN_TOKEN`(스크래퍼와 같은 값), `CORS_ALLOWED_ORIGINS`(기본 `https://hsu-auto-scheduler.vercel.app`)
 
-- 테이블은 api 가 뜰 때 Flyway 가 만든다. 데이터는 스크래퍼로 학기마다 넣는다.
+- 테이블은 be 가 뜰 때 Flyway 가 만든다. 데이터는 스크래퍼로 학기마다 넣는다.
 - 학기 저장 API(`/admin`)는 nginx 에서 막혀 있다. 스크래퍼는 SSH 터널로 서버의 `127.0.0.1:5000` 에 보낸다.
 
   ```bash
