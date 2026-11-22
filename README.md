@@ -26,13 +26,13 @@
 
 ### Back-End & Data
 
-- NestJS – 메인 API 서버
+- Kotlin + Spring Boot – 메인 API 서버
 
 - FastAPI – 시간표 추천 엔진
 
 - Google OR-Tools (CP-SAT Solver) – 최적화 문제 해결
 
-- MySQL (TypeORM)
+- PostgreSQL (Flyway, JPA)
 
 ### Infra
 
@@ -56,11 +56,30 @@ Velog: https://velog.io/@grt1022rt/hsu-auto-scheduler-prologue
 | 폴더 | 설명 |
 | --- | --- |
 | `hsu-auto-scheduler-fe` | Next.js 프론트엔드 |
-| `hsu-auto-scheduler-be` | NestJS 메인 API 서버 |
+| `hsu-auto-scheduler-api` | Kotlin + Spring Boot 메인 API 서버, PostgreSQL·Flyway ([사용법](hsu-auto-scheduler-api/README.md)) |
 | `ortools-scheduler` | FastAPI + OR-Tools 시간표 추천 엔진 |
 | `hsu-auto-scheduler-scraper` | 종정시 시간표 수집·변환·전송 (`npm run scrape -- 2026-2`) ([사용법](hsu-auto-scheduler-scraper/README.md)) |
-| `sql` | DB 초기화 스크립트(`init.sql`), DDL, 마이그레이션 |
+| `sql` | 스키마 설계 문서(`ddl_v3/schema.dbml`). 실제 스키마는 api 의 Flyway 마이그레이션이 만든다. `ddl_v1`·`ddl_v2`·`init.sql` 은 MySQL 시절 기록 |
 | `nginx` | 리버스 프록시 설정 |
+
+## 🚀 Deploy
+
+```bash
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+루트 `.env` 에 넣을 값: `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`, `ADMIN_TOKEN`(스크래퍼와 같은 값), `CORS_ALLOWED_ORIGINS`(기본 `https://hsu-auto-scheduler.vercel.app`)
+
+- 테이블은 api 가 뜰 때 Flyway 가 만든다. 데이터는 스크래퍼로 학기마다 넣는다.
+- 학기 저장 API(`/admin`)는 nginx 에서 막혀 있다. 스크래퍼는 SSH 터널로 서버의 `127.0.0.1:5000` 에 보낸다.
+
+  ```bash
+  ssh -N -L 5000:localhost:5000 <서버>
+  ```
+
+  ```bash
+  BASE_URL=http://localhost:5000 npm run send -- 2026-2
+  ```
 
 ## 🤝 Commit Convention
 

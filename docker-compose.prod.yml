@@ -12,57 +12,66 @@ services:
     networks:
       - public
     depends_on:
-      - nestjs
-  mysql:
-    image: mysql:8.4
-    container_name: mysql-db
+      - api
+
+  postgres:
+    image: postgres:17-alpine
+    container_name: postgres-db
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${DB_DATABASE}
-      MYSQL_USER: ${DB_USERNAME}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      TZ: Asia/Seoul
     networks:
       - private
     volumes:
-      # MySQL의 실제 데이터 파일은 여기에 저장됨
-      - hsu_auto_scheduler_mysql_data:/var/lib/mysql
+      # PostgreSQL 실제 데이터 파일. 테이블은 api 가 뜰 때 Flyway 가 만든다
+      - hsu_auto_scheduler_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
-      # 컨테이너 최초 실행 시 init.sql 자동 실행
-      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
-
-      # SQL 파일 접근용
-      - ./sql:/sql
   fastapi:
     build:
       context: ./ortools-scheduler
       dockerfile: dockerfile.prod
+    restart: always
     networks:
       - private
-  nestjs:
+
+  api:
     build:
-      context: ./hsu-auto-scheduler-be
-      dockerfile: dockerfile.prod
-    # expose:
-    #   - ${NESTJS_PORT}
+      context: ./hsu-auto-scheduler-api
+      dockerfile: Dockerfile
+    restart: always
     ports:
-      - 5000:5000
+      # 외부에는 nginx 로만 연다. 스크래퍼는 SSH 터널로 이 포트에 붙는다 (ssh -L 5000:localhost:5000 <서버>)
+      - "127.0.0.1:5000:5000"
     networks:
       - public
       - private
     environment:
-      PORT: ${NESTJS_PORT}
-      ENV: ${ENV}
-      DB_TYPE: ${DB_TYPE}
-      DB_HOST: ${DB_HOST}
-      DB_PORT: ${DB_PORT}
+      PORT: 5000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: ${DB_DATABASE}
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
-      DB_DATABASE: ${DB_DATABASE}
-      FAST_API_BASE_URL: ${FAST_API_BASE_URL}
+      ADMIN_TOKEN: ${ADMIN_TOKEN}
+      FAST_API_BASE_URL: ${FAST_API_BASE_URL:-http://fastapi:4113}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-https://hsu-auto-scheduler.vercel.app}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      fastapi:
+        condition: service_started
+
 networks:
   public:
   private:
 
 volumes:
-  hsu_auto_scheduler_mysql_data:
+  hsu_auto_scheduler_pg_data:
