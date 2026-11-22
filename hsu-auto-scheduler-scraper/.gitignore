@@ -1,14 +1,6 @@
-
-# Playwright
 node_modules/
-/test-results/
-/playwright-report/
-/blob-report/
-/playwright/.cache/
-
-/20*
-/hsuinfo-*.json
-
 .env*
-/hsuinfo-*.payload.json
+
+# 수집한 JSON과 변환 결과
 /data/
+/hsuinfo-*.json

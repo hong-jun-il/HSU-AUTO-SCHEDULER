@@ -1,19 +1,20 @@
 /*
- * 종정시 내보내기 파일 → 백엔드 전송
+ * 수집한 학기 파일 → 백엔드 전송
  *
- *   npm run send -- hsuinfo-2026-2.json --dry-run   # 변환만 하고 결과를 확인 (전송 안 함)
- *   npm run send -- hsuinfo-2026-2.json             # 실제 전송
+ *   npm run send -- 2026-2              # data/hsuinfo-2026-2.json 을 전송
+ *   npm run send -- 2026-2 --dry-run    # 변환 결과만 data/hsuinfo-2026-2.payload.json 으로 저장
+ *   npm run send -- <파일.json>          # 다른 위치의 내보내기 파일을 전송
  *
- * 내보내기 파일은 console/export-hsuinfo.js 를 종정시 페이지 콘솔에서 실행해 만든다.
+ * 파일은 `npm run scrape -- <학기>` 가 data/ 에 만든다.
  */
 import fs from "fs/promises";
 import path from "path";
-import { postSemester } from "./api/post/postSemester";
-import { postMajors } from "./api/post/postMajors";
-import postCourses from "./api/post/postCourses";
-import { buildCourse } from "./utils/buildCourse";
-import { CourseDBType } from "./type/course.type";
-import { HSUInfoExport } from "./type/HSUInfo/HSUInfoExport.type";
+import { postSemester } from "../api/post/postSemester";
+import { postMajors } from "../api/post/postMajors";
+import postCourses from "../api/post/postCourses";
+import { buildCourse } from "../utils/buildCourse";
+import { CourseDBType } from "../type/course.type";
+import { HSUInfoExport } from "../type/HSUInfo/HSUInfoExport.type";
 
 type BuiltMajor = { code: string; name: string; courses: CourseDBType[] };
 
@@ -37,10 +38,23 @@ function buildAll(data: HSUInfoExport) {
 }
 
 // 내보내기 파일 하나를 변환해 전송한다. 실패하면 예외를 던진다.
-export async function sendFile(file: string, { dryRun = false } = {}) {
+export const DATA_DIR = path.resolve(__dirname, "../data");
+export const SEMESTER_PATTERN = /^\d{4}-[1-4]$/;
+export const dataFileFor = (semester: string) => path.join(DATA_DIR, `hsuinfo-${semester}.json`);
+
+// 내보내기 파일 하나를 변환해 전송한다. expectedSemester가 있으면 파일 안의 학기와 같아야 한다.
+export async function sendFile(
+  file: string,
+  { dryRun = false, expectedSemester }: { dryRun?: boolean; expectedSemester?: string } = {},
+) {
   const data: HSUInfoExport = JSON.parse(await fs.readFile(path.resolve(file), "utf-8"));
+  if (!SEMESTER_PATTERN.test(data.semester ?? "")) {
+    throw new Error(`파일의 semester 값이 이상해요: "${data.semester}"`);
+  }
+  if (expectedSemester && data.semester !== expectedSemester) {
+    throw new Error(`요청한 학기(${expectedSemester})와 파일의 학기(${data.semester})가 달라서 전송하지 않아요: ${file}`);
+  }
   const [year, term] = data.semester.split("-").map(Number);
-  if (!year || !term) throw new Error(`파일의 semester 값이 이상해요: "${data.semester}"`);
 
   const { majors, warnings, errors } = buildAll(data);
   const total = majors.reduce((n, m) => n + m.courses.length, 0);
@@ -78,15 +92,33 @@ export async function sendFile(file: string, { dryRun = false } = {}) {
   console.log("전송 완료");
 }
 
-// npm run send -- <파일> [--dry-run] 으로 직접 실행했을 때
-if (require.main === module) {
+// npm run send -- <학기 | 파일.json> [--dry-run]
+async function main() {
   const args = process.argv.slice(2);
-  const file = args.find((a) => !a.startsWith("--"));
-  if (!file) {
-    console.error("사용법: npm run send -- <hsuinfo-학기.json> [--dry-run]");
+  const target = args.find((a) => !a.startsWith("--"));
+  const dryRun = args.includes("--dry-run");
+  if (!target) {
+    console.error("사용법: npm run send -- <학기, 예: 2026-2 | 파일.json> [--dry-run]");
     process.exit(1);
   }
-  sendFile(file, { dryRun: args.includes("--dry-run") }).catch((err) => {
+
+  if (SEMESTER_PATTERN.test(target)) {
+    const file = dataFileFor(target);
+    try {
+      await fs.access(file);
+    } catch {
+      throw new Error(`${file} 이 없어요. 먼저 \`npm run scrape -- ${target}\` 로 받아 주세요.`);
+    }
+    await sendFile(file, { dryRun, expectedSemester: target });
+  } else if (target.endsWith(".json")) {
+    await sendFile(target, { dryRun });
+  } else {
+    throw new Error(`학기(예: 2026-2)나 .json 파일 경로를 주세요: "${target}"`);
+  }
+}
+
+if (require.main === module) {
+  main().catch((err) => {
     console.error(err instanceof Error ? err.message : err);
     process.exit(1);
   });

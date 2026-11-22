@@ -26,9 +26,3 @@ export const JUYA_MAP = {
   야: DayOrNightEnum.NIGHT,
   합: DayOrNightEnum.BOTH,
 };
-
-export const DAY_OR_NIGHT_MAP = {
-  주야합반: DayOrNightEnum.BOTH,
-  주간: DayOrNightEnum.DAY,
-  야간: DayOrNightEnum.NIGHT,
-};
