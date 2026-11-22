@@ -21,7 +21,9 @@ type BuiltMajor = { code: string; name: string; courses: CourseDBType[] };
 function buildAll(data: HSUInfoExport) {
   const warnings: string[] = [];
   const errors: string[] = [];
-  const majors: BuiltMajor[] = data.majors.map((major) => {
+  // 종정시 전공 목록에는 그 학기 강의가 없는 전공도 섞여 있어서 뺀다
+  const skipped = data.majors.filter((major) => major.courses.length === 0);
+  const majors: BuiltMajor[] = data.majors.filter((major) => major.courses.length > 0).map((major) => {
     const courses: CourseDBType[] = [];
     for (const row of major.courses) {
       try {
@@ -34,7 +36,7 @@ function buildAll(data: HSUInfoExport) {
     }
     return { code: major.code, name: major.name, courses };
   });
-  return { majors, warnings, errors };
+  return { majors, skipped, warnings, errors };
 }
 
 // 내보내기 파일 하나를 변환해 전송한다. 실패하면 예외를 던진다.
@@ -56,9 +58,12 @@ export async function sendFile(
   }
   const [year, term] = data.semester.split("-").map(Number);
 
-  const { majors, warnings, errors } = buildAll(data);
+  const { majors, skipped, warnings, errors } = buildAll(data);
   const total = majors.reduce((n, m) => n + m.courses.length, 0);
   console.log(`${data.semester} (수집 ${data.fetchedAt}): 전공 ${majors.length}개, 강의 ${total}개 변환`);
+  if (skipped.length) {
+    console.log(`강의가 없는 전공 ${skipped.length}개는 보내지 않아요: ${skipped.map((m) => `[${m.code}] ${m.name}`).join(", ")}`);
+  }
   if (warnings.length) console.warn(`경고 ${warnings.length}건:\n  ${warnings.join("\n  ")}`);
   if (errors.length) {
     throw new Error(`변환 실패 ${errors.length}건 — 전송하지 않아요:\n  ${errors.join("\n  ")}`);
