@@ -1,23 +1,25 @@
 services:
-  mysql:
-    image: mysql:8.4
-    container_name: mysql-db
+  postgres:
+    image: postgres:17-alpine
+    container_name: postgres-db
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${DB_DATABASE}
-      MYSQL_USER: ${DB_USERNAME}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE:-hsu_auto_scheduler}
+      POSTGRES_USER: ${DB_USERNAME:-hsu}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-hsu}
+      TZ: Asia/Seoul
     ports:
-      - "${DB_PORT}:3306"
+      - "${DB_PORT:-5432}:5432"
     volumes:
-      # MySQL의 실제 데이터 파일은 여기에 저장됨
-      - hsu_auto_scheduler_mysql_data:/var/lib/mysql
+      # PostgreSQL 실제 데이터 파일
+      # 테이블은 백엔드(Spring)가 뜰 때 Flyway 가 만든다
+      # (hsu-auto-scheduler-api/src/main/resources/db/migration)
+      - hsu_auto_scheduler_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
-      # 컨테이너 최초 실행 시 init.sql 자동 실행
-      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
-
-      # SQL 파일 접근용
-      - ./sql:/sql
 volumes:
-  hsu_auto_scheduler_mysql_data:
+  hsu_auto_scheduler_pg_data:
