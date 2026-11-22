@@ -54,6 +54,7 @@ export function buildCourse(row: HSUInfoRawCourse): {
       online_hour,
       plan_code: plan && plan.toLowerCase() !== "x" ? plan : null,
       remark: row.bigo.trim() || null,
+      classroom_raw: row.classroom,
       offline_schedules,
     },
     warnings,

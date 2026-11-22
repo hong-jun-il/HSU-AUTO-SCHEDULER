@@ -9,21 +9,18 @@
  */
 import fs from "fs/promises";
 import path from "path";
-import { postSemester } from "../api/post/postSemester";
-import { postMajors } from "../api/post/postMajors";
-import postCourses from "../api/post/postCourses";
+import { putSemester } from "../api/putSemester";
 import { buildCourse } from "../utils/buildCourse";
 import { CourseDBType } from "../type/course.type";
 import { HSUInfoExport } from "../type/HSUInfo/HSUInfoExport.type";
-
-type BuiltMajor = { code: string; name: string; courses: CourseDBType[] };
+import { MajorPayload, SemesterPayload } from "../type/payload.type";
 
 function buildAll(data: HSUInfoExport) {
   const warnings: string[] = [];
   const errors: string[] = [];
   // 종정시 전공 목록에는 그 학기 강의가 없는 전공도 섞여 있어서 뺀다
   const skipped = data.majors.filter((major) => major.courses.length === 0);
-  const majors: BuiltMajor[] = data.majors.filter((major) => major.courses.length > 0).map((major) => {
+  const majors: MajorPayload[] = data.majors.filter((major) => major.courses.length > 0).map((major) => {
     const courses: CourseDBType[] = [];
     for (const row of major.courses) {
       try {
@@ -39,7 +36,6 @@ function buildAll(data: HSUInfoExport) {
   return { majors, skipped, warnings, errors };
 }
 
-// 내보내기 파일 하나를 변환해 전송한다. 실패하면 예외를 던진다.
 export const DATA_DIR = path.resolve(__dirname, "../data");
 export const SEMESTER_PATTERN = /^\d{4}-[1-4]$/;
 export const dataFileFor = (semester: string) => path.join(DATA_DIR, `hsuinfo-${semester}.json`);
@@ -69,32 +65,21 @@ export async function sendFile(
     throw new Error(`변환 실패 ${errors.length}건 — 전송하지 않아요:\n  ${errors.join("\n  ")}`);
   }
 
+  const payload: SemesterPayload = { year, term, scraped_at: data.fetchedAt, majors };
+
   if (dryRun) {
     const out = path.resolve(file.replace(/\.json$/, "") + ".payload.json");
-    await fs.writeFile(out, JSON.stringify({ year, term, majors }, null, 2), "utf-8");
+    await fs.writeFile(out, JSON.stringify(payload, null, 2), "utf-8");
     console.log(`--dry-run: 전송하지 않았어요. 변환 결과: ${out}`);
     return;
   }
 
-  if (!process.env.BASE_URL) throw new Error(".env 에 BASE_URL 이 없어요.");
-
-  const { data: semester } = await postSemester({ year, term });
-  const semesterId = semester!.id;
-  console.log(await postMajors(semesterId, majors.map(({ code, name }) => ({ code, name }))));
-
-  const failed: string[] = [];
-  for (const major of majors) {
-    try {
-      await postCourses({ semesterId, code: major.code, name: major.name, courses: major.courses });
-      console.log(`[${major.code}] ${major.name}: ${major.courses.length}개 전송`);
-    } catch (err) {
-      failed.push(`[${major.code}] ${(err as Error).message}`);
-    }
-  }
-  if (failed.length) {
-    throw new Error(`전송 실패 ${failed.length}건:\n  ${failed.join("\n  ")}`);
-  }
-  console.log("전송 완료");
+  // 학기 하나를 요청 하나로 보낸다. 백엔드가 한 트랜잭션으로 교체하므로 일부만 저장되는 일은 없다
+  const result = await putSemester(payload);
+  console.log(
+    `전송 완료 ${result.semester_id}: 전공 ${result.majors}, 과목 ${result.courses}, 분반 ${result.lectures}` +
+      ` (폐강 삭제 ${result.deleted_lectures}), 전공-과목 ${result.major_courses}, 시간표 ${result.offline_schedules}`,
+  );
 }
 
 // npm run send -- <학기 | 파일.json> [--dry-run]

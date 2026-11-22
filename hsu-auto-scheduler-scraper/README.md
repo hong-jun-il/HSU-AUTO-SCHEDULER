@@ -17,19 +17,22 @@ npm run send -- 2026-2              # 이미 받은 data/hsuinfo-2026-2.json 을
 3. Tampermonkey 대시보드 → **새 스크립트**에서 기본 내용을 모두 지우고 [`console/hsuinfo-export.user.js`](console/hsuinfo-export.user.js) 내용을 붙여넣어 저장합니다.
    - 터미널에서 `pbcopy < console/hsuinfo-export.user.js`로 복사하면 빠짐없이 복사됩니다.
 4. Chrome 설정 → 다운로드에서 **다운로드 전에 각 파일의 저장 위치 확인**을 끕니다.
-5. 이 폴더에서 `npm ci`, 그리고 `.env`에 `BASE_URL=<백엔드 주소>`를 넣습니다.
+5. 이 폴더에서 `npm ci`, 그리고 `.env`에 `BASE_URL=<백엔드 주소>`와 `ADMIN_TOKEN=<백엔드의 ADMIN_TOKEN 값>`을 넣습니다.
+   - 운영 서버의 저장 API는 nginx에서 막혀 있어서 SSH 터널(`ssh -N -L 5000:localhost:5000 <서버>`)을 열고 `BASE_URL=http://localhost:5000`으로 보냅니다.
 
 ## 동작
 
 1. `npm run scrape -- 2026-2`가 Chrome으로 종정시 시간표 페이지를 `#export=2026-2`를 붙여 엽니다.
 2. Tampermonkey 스크립트가 그 학기의 전공 목록과 강의를 받습니다. 진행 상황은 페이지 오른쪽 아래에 보입니다. (3~5분, 요청 사이 1.5~2.5초 대기)
 3. `hsuinfo-2026-2.json`이 다운로드 폴더에 저장되면 명령이 2~4초 안에 `data/`로 옮깁니다.
-4. 강의를 DB 형식으로 변환하고, 문제가 없으면 학기 → 전공 → 전공별 강의 순으로 백엔드에 보냅니다.
+4. 강의를 DB 형식으로 변환하고, 문제가 없으면 학기 하나를 요청 하나(`PUT /admin/semesters/<학기>`)로 백엔드에 보냅니다.
    - 변환 실패가 하나라도 있으면 아무것도 보내지 않습니다.
    - 요청한 학기와 파일 안의 학기가 다르면 보내지 않습니다.
-   - 한 전공 전송이 실패해도 나머지는 계속 보내고, 실패 목록을 마지막에 보여줍니다.
+   - 백엔드는 그 학기를 한 트랜잭션으로 통째로 교체합니다. 실패하면 아무것도 바뀌지 않고, 같은 파일을 다시 보내도 결과가 같습니다.
+   - 이번 수집에 없는 분반(폐강)은 지워지고, 이미 있던 분반은 id가 유지됩니다.
+   - 같은 분반이 전공마다 다르게 오면 백엔드가 충돌 목록과 함께 거절합니다.
 
-환경변수: `BASE_URL`(필수), `DOWNLOAD_DIR`(기본 `~/Downloads`), `SCRAPE_TIMEOUT_MIN`(기본 15분)
+환경변수: `BASE_URL`(필수), `ADMIN_TOKEN`(필수, 백엔드와 같은 값), `DOWNLOAD_DIR`(기본 `~/Downloads`), `SCRAPE_TIMEOUT_MIN`(기본 15분)
 
 ## 수동으로 받기
 
@@ -46,7 +49,7 @@ npm run send -- 2026-2              # 이미 받은 data/hsuinfo-2026-2.json 을
 | `scripts/send.ts` | `npm run send`: 변환 후 백엔드 전송 |
 | `utils/parseClassroom.ts` | 강의실·교시 문자열 → 요일/시작/끝/장소. 교시 → 시각 규칙은 파일 주석 참고 |
 | `utils/buildCourse.ts` | 종정시 강의 한 줄 → 백엔드 강의 형식 |
-| `api/post/` | 백엔드 학기·전공·강의 저장 API 호출 |
+| `api/putSemester.ts` | 백엔드 학기 저장 API(`PUT /admin/semesters/<학기>`) 호출 |
 | `constants/MAP_OBJ.ts` | 한글 값(전필, BL, 주 …) → enum 매핑 |
 | `type/` | 내보내기 파일 형식, 백엔드 전송 형식, enum |
 

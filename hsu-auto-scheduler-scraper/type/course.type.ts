@@ -18,5 +18,6 @@ export type CourseDBType = {
   online_hour: number;
   plan_code: string | null;
   remark: string | null;
+  classroom_raw: string; // 종정시 classroom 원문 (교시 규칙이 바뀌면 DB 에서 다시 해석할 수 있게)
   offline_schedules: TimePlaceDBType[];
 };
