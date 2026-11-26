@@ -30,6 +30,12 @@ export default function CPSATTimetableTab({
           transition={{ duration: 0.4, ease: "easeOut" }}
         >
           {selectedCoursesByDayList.map((selectedCoursesByDay, i) => {
+            // 보이는 슬라이드와 넘길 때 함께 보이는 앞뒤 한 장만 그린다
+            // 나머지는 슬라이드 폭만 차지하는 빈 칸으로 두어 translateX 위치는 그대로 유지한다
+            if (Math.abs(i - currentIndex) > 1) {
+              return <div key={i} className="w-full shrink-0" />;
+            }
+
             return (
               <CPSATTimetableSlideItem
                 key={i}
