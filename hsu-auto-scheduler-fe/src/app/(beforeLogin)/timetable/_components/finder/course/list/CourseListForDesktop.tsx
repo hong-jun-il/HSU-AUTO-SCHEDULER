@@ -3,7 +3,7 @@
 import SangSangBoogi from "@/assets/SangSangBoogi.webp";
 import clsx from "clsx";
 import Image from "next/image";
-import { useTimetableStore } from "@/store/timetable/timetableStore";
+import { useHoveredCourseStore } from "@/store/hoveredCourse/hoveredCourseStore";
 import { useShallow } from "zustand/shallow";
 import useMarkCourseSchedule from "@/hooks/CourseFinder/PersonalSchedule/useMarkCourseSchedule";
 import CourseListLoading from "./CourseListLoading";
@@ -16,7 +16,7 @@ type Props = {
 };
 
 export default function CourseListForDesktop({ isLoading, courses }: Props) {
-  const { setHoveredCourse, clearHoveredCourse } = useTimetableStore(
+  const { setHoveredCourse, clearHoveredCourse } = useHoveredCourseStore(
     useShallow((state) => ({
       setHoveredCourse: state.setHoveredCourse,
       clearHoveredCourse: state.clearHoveredCourse,

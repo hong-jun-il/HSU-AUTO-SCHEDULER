@@ -1,6 +1,6 @@
 "use client";
 
-import { useTimetableStore } from "@/store/timetable/timetableStore";
+import { useHoveredCourseStore } from "@/store/hoveredCourse/hoveredCourseStore";
 import clsx from "clsx";
 import { Dispatch, SetStateAction } from "react";
 import { useShallow } from "zustand/shallow";
@@ -14,7 +14,7 @@ export default function CourseFinderTabChanger({
   editMode,
   setEditMode,
 }: Props) {
-  const { clearHoveredCourse } = useTimetableStore(
+  const { clearHoveredCourse } = useHoveredCourseStore(
     useShallow((state) => ({
       clearHoveredCourse: state.clearHoveredCourse,
     })),

@@ -4,15 +4,9 @@ import { useEffect, useMemo } from "react";
 import clsx from "clsx";
 import { useShallow } from "zustand/shallow";
 import { motion } from "framer-motion";
-import {
-  CourseTimetableRenderType,
-  HoverCourseByDayType,
-  SelectedCoursesByDayType,
-} from "@/types/course_timetable_render.type";
-import { getTopByStartTime } from "@/utils/getTopByStartTime";
+import { SelectedCoursesByDayType } from "@/types/course_timetable_render.type";
 import { useTimetableStore } from "@/store/timetable/timetableStore";
 import useCurrentSemester from "@/hooks/common/useCurrentSemester";
-import { getBlockHeight } from "@/utils/getBlockHeight";
 import { PersonalSchedulesByDayType } from "@/types/personalScheduleRender.type";
 import groupCoursesByDay from "@/utils/groupCoursesByDay";
 import groupPersonalScheduleByDay from "@/utils/groupPersonalSchedulesByDay";
@@ -24,7 +18,6 @@ export default function TimeTableBody() {
   const currentSemester = useCurrentSemester();
   const {
     isOpen,
-    hoveredCourse,
     selectedCourses,
     ensureSelectedCoursesSemesterInitialized,
     personalSchedules,
@@ -34,7 +27,6 @@ export default function TimeTableBody() {
   } = useTimetableStore(
     useShallow((state) => ({
       isOpen: state.isOpen,
-      hoveredCourse: state.hoveredCourse,
       selectedCourses: state.selectedCourses,
       ensureSelectedCoursesSemesterInitialized:
         state.ensureSelectedCoursesSemesterInitialized,
@@ -64,38 +56,6 @@ export default function TimeTableBody() {
     personalSchedulesInCurSemester,
     ensurePersonalSchedulesSemesterInitialized,
   ]);
-
-  const hoveredCourseByDay: HoverCourseByDayType | undefined = useMemo(() => {
-    if (!hoveredCourse) return undefined;
-
-    const baseInfo: CourseTimetableRenderType = {
-      id: hoveredCourse.id,
-      name: hoveredCourse.name,
-      section: hoveredCourse.section,
-      professors: hoveredCourse.professors,
-      colorIndex: 0,
-    };
-
-    // 오프라인 스케줄이 있을 경우
-    if (hoveredCourse.offline_schedules.length > 0) {
-      return hoveredCourse.offline_schedules.reduce((acc, cur) => {
-        if (!acc[cur.day]) {
-          acc[cur.day] = {
-            ...baseInfo,
-            offlineSchedule: cur,
-            top: getTopByStartTime(cur.start_time, false),
-            height: getBlockHeight(cur.start_time, cur.end_time, false),
-          };
-        }
-
-        return acc;
-      }, {} as HoverCourseByDayType);
-    }
-    // 온라인이거나 오프라인 스케줄이 없을 경우
-    else {
-      return { nontimes: baseInfo };
-    }
-  }, [hoveredCourse]);
 
   const selectedCoursesByDay: SelectedCoursesByDayType | undefined =
     useMemo(() => {
@@ -133,7 +93,6 @@ export default function TimeTableBody() {
       className={clsx("relative flex h-fit w-full flex-col")}
     >
       <TimeTableGrid
-        hoveredCourseByDay={hoveredCourseByDay}
         selectedCoursesByDay={selectedCoursesByDay}
         personalSchedulesByDay={personalSchedulesByDay}
         isCPSATResult={false}

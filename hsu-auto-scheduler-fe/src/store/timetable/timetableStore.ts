@@ -5,10 +5,6 @@ import {
 } from "./courseFinder.slice";
 import { devtools, persist, subscribeWithSelector } from "zustand/middleware";
 import {
-  createHoveredCourseSlice,
-  HoveredCourseSliceType,
-} from "./hoveredCourse.slice";
-import {
   createSelectedCourseSlice,
   SelectedCourseSliceType,
 } from "./selectedCourse.slice";
@@ -26,7 +22,6 @@ import {
 } from "./personalSchedule.slice";
 
 type TimetableStoreType = CourseFinderSliceType &
-  HoveredCourseSliceType &
   SelectedCourseSliceType &
   PersonalScheduleModalSliceType &
   PersonalScheduleSliceType &
@@ -37,7 +32,6 @@ export const useTimetableStore = create<TimetableStoreType>()(
     persist(
       subscribeWithSelector((...a) => ({
         ...createCourseFinderSlice(...a),
-        ...createHoveredCourseSlice(...a),
         ...createSelectedCourseSlice(...a),
         ...createPersonalScheduleModalSlice(...a),
         ...createPersonalScheduleSlice(...a),
