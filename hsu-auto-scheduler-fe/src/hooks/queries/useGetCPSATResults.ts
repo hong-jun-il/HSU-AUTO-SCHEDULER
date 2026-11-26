@@ -40,6 +40,7 @@ export default function useGetCPSATResults() {
       pageParam: number;
     }): Promise<
       ResponseType<{
+        // 서버가 돌려주는 해의 개수(상위 최대 50개)
         total_solution_count: number;
         solutions: CPSATSolutionType[];
       }>
@@ -82,8 +83,18 @@ export default function useGetCPSATResults() {
       return response.json();
     },
     initialPageParam: 1,
-    getNextPageParam: (lastPage, _, lastPageParam) => {
-      if (lastPage.data.solutions.length < CPSAT_RESULT_PER_PAGE) {
+    getNextPageParam: (lastPage, allPages, lastPageParam) => {
+      // 받은 해가 서버가 돌려줄 수 있는 개수(total_solution_count)에 닿으면 끝
+      // 마지막 페이지가 꽉 차 있어도(예: 50개) 빈 다음 페이지를 요청하지 않는다
+      const loadedCount = allPages.reduce(
+        (sum, page) => sum + page.data.solutions.length,
+        0,
+      );
+
+      if (
+        lastPage.data.solutions.length === 0 ||
+        loadedCount >= lastPage.data.total_solution_count
+      ) {
         return undefined;
       }
 
