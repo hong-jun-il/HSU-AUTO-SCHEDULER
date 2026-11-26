@@ -8,14 +8,21 @@ import {
   CPSATResultModalSliceType,
   createCPSATResultModalSlice,
 } from "./CPSATResultModal.slice";
+import {
+  CPSATRequestSliceType,
+  createCPSATRequestSlice,
+} from "./CPSATRequest.slice";
 
-type CPSATResultStoreType = CPSATResultModalSliceType & CPSATResultSliceType;
+type CPSATResultStoreType = CPSATResultModalSliceType &
+  CPSATResultSliceType &
+  CPSATRequestSliceType;
 
 export const useCPSATResultStore = create<CPSATResultStoreType>()(
   devtools(
     subscribeWithSelector((...a) => ({
       ...createCPSATResultModalSlice(...a),
       ...createCPSATResultSlice(...a),
+      ...createCPSATRequestSlice(...a),
     })),
   ),
 );
