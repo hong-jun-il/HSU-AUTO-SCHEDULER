@@ -76,7 +76,8 @@ export default function CourseInfoCard({
         )}
       </div>
 
-      {hoveredCourse && hoveredCourse.course_id === course.course_id && (
+      {/* 같은 과목의 다른 분반이 아니라, 탭한 분반에만 버튼을 보여준다 */}
+      {hoveredCourse && hoveredCourse.id === course.id && (
         <div className="space-x-3">
           <button
             className={clsx(

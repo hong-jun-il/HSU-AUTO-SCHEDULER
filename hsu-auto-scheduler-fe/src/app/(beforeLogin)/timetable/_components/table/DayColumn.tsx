@@ -7,10 +7,10 @@ import CourseBlock from "./CourseBlock";
 import { PersonalScheduleRenderInfoType } from "@/types/personalScheduleRender.type";
 import PersonalScheduleBlock from "./PersonalScheduleBlock";
 import { CourseTimetableRenderType } from "@/types/course_timetable_render.type";
+import HoveredCourseBlock from "./HoveredCourseBlock";
 
 type Props = {
   day: WeekdayEnum;
-  hoveredCourseInCurDay?: CourseTimetableRenderType;
   coursesInCurDay?: CourseTimetableRenderType[];
   personalSchedulesInCurDay?: PersonalScheduleRenderInfoType[];
   isCPSATResult: boolean;
@@ -19,7 +19,6 @@ type Props = {
 
 export default function DayColumn({
   day,
-  hoveredCourseInCurDay,
   coursesInCurDay,
   personalSchedulesInCurDay,
   isCPSATResult,
@@ -40,13 +39,7 @@ export default function DayColumn({
         />
       ))}
 
-      {hoveredCourseInCurDay && (
-        <CourseBlock
-          courseRenderInfo={hoveredCourseInCurDay}
-          isCPSATResult={isCPSATResult}
-          isHoveredCourse={true}
-        />
-      )}
+      {!isCPSATResult && <HoveredCourseBlock day={day} />}
 
       {coursesInCurDay &&
         coursesInCurDay.map((courseInCurDay) => (

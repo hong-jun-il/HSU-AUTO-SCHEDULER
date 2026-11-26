@@ -2,6 +2,7 @@
 
 import SangSangBoogi from "@/assets/SangSangBoogi.webp";
 import { useTimetableStore } from "@/store/timetable/timetableStore";
+import { useHoveredCourseStore } from "@/store/hoveredCourse/hoveredCourseStore";
 import { useShallow } from "zustand/shallow";
 import { useWatch } from "react-hook-form";
 import { useEffect } from "react";
@@ -18,11 +19,11 @@ type Props = {
 };
 
 export default function CourseListForMobile({ isLoading, courses }: Props) {
-  const { hoveredCourse, isOpen, setHoveredCourse, clearHoveredCourse } =
-    useTimetableStore(
+  const isOpen = useTimetableStore((state) => state.isOpen);
+  const { hoveredCourse, setHoveredCourse, clearHoveredCourse } =
+    useHoveredCourseStore(
       useShallow((state) => ({
         hoveredCourse: state.hoveredCourse,
-        isOpen: state.isOpen,
         setHoveredCourse: state.setHoveredCourse,
         clearHoveredCourse: state.clearHoveredCourse,
       })),

@@ -1,4 +1,5 @@
 import { useTimetableStore } from "@/store/timetable/timetableStore";
+import { useHoveredCourseStore } from "@/store/hoveredCourse/hoveredCourseStore";
 import { useShallow } from "zustand/shallow";
 import useCurrentSemester from "../../common/useCurrentSemester";
 import calcMinIndex from "@/utils/getTimeIndex";
@@ -13,7 +14,6 @@ export default function useMarkCourseSchedule() {
     ensureTimeSelectionInitialized,
     timeSelections,
     addTimeRange,
-    clearHoveredCourse,
   } = useTimetableStore(
     useShallow((state) => ({
       ensureSelectedCoursesSemesterInitialized:
@@ -24,8 +24,10 @@ export default function useMarkCourseSchedule() {
       ensureTimeSelectionInitialized: state.ensureTimeSelectionInitialized,
       timeSelections: state.timeSelections,
       addTimeRange: state.addTimeRange,
-      clearHoveredCourse: state.clearHoveredCourse,
     })),
+  );
+  const clearHoveredCourse = useHoveredCourseStore(
+    (state) => state.clearHoveredCourse,
   );
 
   const currentSemester = useCurrentSemester();
