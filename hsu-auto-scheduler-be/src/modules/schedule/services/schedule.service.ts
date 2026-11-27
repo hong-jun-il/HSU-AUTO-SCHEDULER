@@ -170,8 +170,15 @@ export class ScheduleService {
 
     // SQL: 6. 공강 요일 필터링
     if (no_class_days.length > 0) {
+      // 공강 요일에 수업이 하나라도 있는 강의를 통째로 뺀다
+      // (조인된 수업 시간 줄에 os.day NOT IN 을 걸면 그 요일 줄만 빠지고
+      //  나머지 요일만 가진 강의처럼 남아서, 공강 요일 수업이 검색·추천에 섞였다)
       query.andWhere(
-        '(os.day NOT IN (:...excludeDays) OR os.lecture_id IS NULL)',
+        `NOT EXISTS (
+          SELECT 1 FROM offline_schedule excluded_os
+          WHERE excluded_os.lecture_id = l.id
+            AND excluded_os.day IN (:...excludeDays)
+        )`,
         {
           excludeDays: no_class_days,
         },
@@ -343,8 +350,15 @@ export class ScheduleService {
 
     // SQL: 5. 공강 요일 필터링
     if (no_class_days.length > 0) {
+      // 공강 요일에 수업이 하나라도 있는 강의를 통째로 뺀다
+      // (조인된 수업 시간 줄에 os.day NOT IN 을 걸면 그 요일 줄만 빠지고
+      //  나머지 요일만 가진 강의처럼 남아서, 공강 요일 수업이 검색·추천에 섞였다)
       query.andWhere(
-        '(os.day NOT IN (:...excludeDays) OR os.lecture_id IS NULL)',
+        `NOT EXISTS (
+          SELECT 1 FROM offline_schedule excluded_os
+          WHERE excluded_os.lecture_id = l.id
+            AND excluded_os.day IN (:...excludeDays)
+        )`,
         {
           excludeDays: no_class_days,
         },
