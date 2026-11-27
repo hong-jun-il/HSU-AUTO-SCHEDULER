@@ -1,4 +1,4 @@
-// 데스크탑 전용 테이블 row
+// 데스크탑 전용 강의 목록 행
 
 "use client";
 
@@ -12,6 +12,7 @@ import { CourseType } from "@/types/schemas/course.schema";
 import { formatOfflineScheduleView } from "@/utils/format_offline_schedule_view";
 import openLecturePlan from "@/utils/openLecturePlan";
 import clsx from "clsx";
+import { COURSE_TABLE_GRID_COLUMNS } from "./courseTableGrid";
 
 type Props = {
   course: CourseType;
@@ -27,50 +28,66 @@ export default function CourseInfoTableRow({
   onClickCourse,
 }: Props) {
   return (
-    <tr
+    <div
+      role="row"
       className={clsx(
-        "cursor-pointer bg-white text-xs",
+        "grid min-h-22 cursor-pointer bg-white text-center text-xs",
+        // 셀은 행 높이만큼 늘어나고(배경색 칸이 행을 꽉 채우도록) 내용은 가운데 정렬
+        "[&>div]:flex [&>div]:items-center [&>div]:justify-center",
         "hover:bg-course-finder-courses-table-row-hover-bg",
+        // 강의를 한 번에 전부 그리므로, 화면 밖 행은 브라우저가 레이아웃·그리기를 건너뛰게 한다.
+        // <tr> 에는 content-visibility 가 적용되지 않아 div 그리드로 바꿨다. 44px 은 그리기 전 자리값(한 줄 행 높이)
+        "[content-visibility:auto] [contain-intrinsic-size:auto_44px]",
       )}
+      style={{ gridTemplateColumns: COURSE_TABLE_GRID_COLUMNS }}
       onMouseEnter={() => setHoveredCourse(course)}
       onMouseLeave={clearHoveredCourse}
       onClick={() => onClickCourse(course)}
     >
-      <td>
+      <div role="cell">
         <span className="text-hsu bg-hsu/20 rounded-lg p-3 font-semibold">{`${course.code}-${course.section}`}</span>
-      </td>
+      </div>
 
-      <td className="text-hsu font-semibold">{course.name}</td>
+      <div role="cell" className="text-hsu font-semibold">
+        {course.name}
+      </div>
 
-      <td className="text-hsu-black-300 font-medium">{course.professors}</td>
+      <div role="cell" className="text-hsu-black-300 font-medium">
+        {course.professors}
+      </div>
 
-      <td className="bg-hsu/20 text-hsu font-semibold">
+      <div role="cell" className="bg-hsu/20 text-hsu font-semibold">
         {course.grades
           .map((grade) => (grade === 0 ? "전학년" : grade))
           .join("/")}
-      </td>
+      </div>
 
-      <td className="text-course-info-text-base-gray font-medium">
+      <div role="cell" className="text-course-info-text-base-gray font-medium">
         {course.grade_limits.length > 0 ? course.grade_limits.join(", ") : "-"}
-      </td>
+      </div>
 
-      <td className="bg-hsu/20 text-hsu font-semibold">{course.credit}</td>
+      <div role="cell" className="bg-hsu/20 text-hsu font-semibold">
+        {course.credit}
+      </div>
 
-      <td className="text-course-info-text-base-gray font-medium">
+      <div role="cell" className="text-course-info-text-base-gray font-medium">
         {DeliveryMethodKorMap[course.delivery_method]}
-      </td>
+      </div>
 
-      <td className="text-course-info-text-base-gray font-medium">
+      <div role="cell" className="text-course-info-text-base-gray font-medium">
         {course.requirement_types
           .map((rt) => RequirementTypeKorMap[rt])
           .join("/")}
-      </td>
+      </div>
 
-      <td className="bg-hsu/20 text-hsu font-semibold">
+      <div role="cell" className="bg-hsu/20 text-hsu font-semibold">
         {DayOrNightKorMap[course.day_or_night]}
-      </td>
+      </div>
 
-      <td className="text-course-info-text-base-gray font-medium whitespace-pre-line">
+      <div
+        role="cell"
+        className="text-course-info-text-base-gray !block self-center font-medium whitespace-pre-line"
+      >
         <span className="text-hsu font-semibold">
           {course.online_hour > 0 && `온라인강좌: ${course.online_hour}시간\n`}
         </span>
@@ -78,9 +95,9 @@ export default function CourseInfoTableRow({
           (course.offline_schedules.length > 0
             ? formatOfflineScheduleView(course.offline_schedules)
             : "-")}
-      </td>
+      </div>
 
-      <td>
+      <div role="cell">
         {course.plan_code ? (
           <button
             onClick={(e) => {
@@ -94,7 +111,7 @@ export default function CourseInfoTableRow({
         ) : (
           "-"
         )}
-      </td>
-    </tr>
+      </div>
+    </div>
   );
 }

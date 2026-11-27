@@ -9,20 +9,34 @@ import useMarkCourseSchedule from "@/hooks/CourseFinder/PersonalSchedule/useMark
 import CourseListLoading from "./CourseListLoading";
 import CourseInfoTableRow from "./CourseInfoTableRow";
 import { CourseType } from "@/types/schemas/course.schema";
-import { ReactNode } from "react";
+import useProgressiveList from "@/hooks/common/useProgressiveList";
+import { COURSE_TABLE_GRID_COLUMNS } from "./courseTableGrid";
+
+// 1,400여 행을 한 번에 그리면 메인 스레드가 오래 멈춘다(<table> 시절 CPU 4배 저하에서 약 320ms).
+// 200행씩이면 덩어리마다 50~60ms 라 아직 긴 작업이 남고, 120행씩이면 긴 작업(50ms 초과)이 거의 사라진다
+const FIRST_ROWS = 50;
+const ROWS_PER_CHUNK = 120;
+
+const HEADER_LABELS = [
+  "과목코드",
+  "과목명",
+  "교수",
+  "학년",
+  "학년제한",
+  "학점",
+  "과목구분",
+  "이수구분",
+  "주/야",
+  "강의 스케줄",
+  "강의 계획서",
+];
 
 type Props = {
   isLoading: boolean;
   courses?: CourseType[];
-  // 본문 스크롤 영역 맨 아래에 붙일 내용 (다음 페이지 감지용 요소)
-  footer?: ReactNode;
 };
 
-export default function CourseListForDesktop({
-  isLoading,
-  courses,
-  footer,
-}: Props) {
+export default function CourseListForDesktop({ isLoading, courses }: Props) {
   const { setHoveredCourse, clearHoveredCourse } = useHoveredCourseStore(
     useShallow((state) => ({
       setHoveredCourse: state.setHoveredCourse,
@@ -30,122 +44,68 @@ export default function CourseListForDesktop({
     })),
   );
   const { onClickCourse } = useMarkCourseSchedule();
+  const visibleCourses = useProgressiveList(
+    courses,
+    FIRST_ROWS,
+    ROWS_PER_CHUNK,
+  );
 
   return (
     // 헤더는 고정하고 강의 행만 스크롤한다.
     // 두 영역 모두 scrollbar-gutter: stable 로 스크롤바 폭만큼 자리를 똑같이 비워 두어 열 경계를 맞춘다
-    <div className="flex h-full w-full flex-col">
-      <div className="shrink-0 overflow-y-hidden [scrollbar-gutter:stable]">
-        <table
+    <div
+      role="table"
+      aria-label="강의 목록"
+      className="flex h-full w-full flex-col"
+    >
+      <div
+        role="rowgroup"
+        className="shrink-0 overflow-y-hidden [scrollbar-gutter:stable]"
+      >
+        <div
+          role="row"
           className={clsx(
-            "h-18 w-full table-fixed",
-            "[&_th]:text-xs [&_th]:text-white",
-            "[&_th]:font-semibold",
+            "grid h-18 w-full text-xs font-semibold text-white",
+            "[&>div]:flex [&>div]:items-center [&>div]:justify-center",
+            "[&>div]:bg-[linear-gradient(135deg,var(--color-hsu)_0%,var(--color-deep-hsu)_100%)]",
           )}
+          style={{ gridTemplateColumns: COURSE_TABLE_GRID_COLUMNS }}
         >
-          <colgroup
-            className={clsx(
-              "[&_col]:bg-[linear-gradient(135deg,var(--color-hsu)_0%,var(--color-deep-hsu)_100%)]",
-            )}
-          >
-            {/* 과목코드 */}
-            <col className="w-50" />
-            {/* 과목명 */}
-            <col className="min-w-50" />
-            {/* 교수 */}
-            <col className="w-48" />
-            {/* 학년 */}
-            <col className="w-31" />
-            {/* 학년제한 */}
-            <col className="w-30" />
-            {/* 학점 */}
-            <col className="w-20" />
-            {/* 과목구분 */}
-            <col className="w-31" />
-            {/* 이수구분 */}
-            <col className="w-33" />
-            {/* 주/야 */}
-            <col className="w-20" />
-            {/* 강의 스케줄 */}
-            <col className="min-w-130" />
-            {/* 강의 계획서 */}
-            <col className="w-42" />
-          </colgroup>
-          <thead>
-            <tr>
-              <th>과목코드</th>
-              <th>과목명</th>
-              <th>교수</th>
-              <th>학년</th>
-              <th>학년제한</th>
-              <th>학점</th>
-              <th>과목구분</th>
-              <th>이수구분</th>
-              <th>주/야</th>
-              <th>강의 스케줄</th>
-              <th>강의 계획서</th>
-            </tr>
-          </thead>
-        </table>
+          {HEADER_LABELS.map((label) => (
+            <div key={label} role="columnheader">
+              {label}
+            </div>
+          ))}
+        </div>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto [scrollbar-gutter:stable]">
+      <div
+        role="rowgroup"
+        className="min-h-0 flex-1 overflow-y-auto [scrollbar-gutter:stable]"
+      >
         {isLoading ? (
           <CourseListLoading />
         ) : (
-          <table className="w-full table-fixed border-collapse [&_tr]:h-22">
-            <colgroup>
-              {/* 과목코드 */}
-              <col className="w-50" />
-              {/* 과목명 */}
-              <col className="min-w-50" />
-              {/* 교수 */}
-              <col className="w-48" />
-              {/* 학년 */}
-              <col className="w-31" />
-              {/* 학년제한 */}
-              <col className="w-30" />
-              {/* 학점 */}
-              <col className="w-20" />
-              {/* 과목구분 */}
-              <col className="w-31" />
-              {/* 이수구분 */}
-              <col className="w-33" />
-              {/* 주/야 */}
-              <col className="w-20" />
-              {/* 강의 스케줄 */}
-              <col className="min-w-130" />
-              {/* 강의 계획서 */}
-              <col className="w-42" />
-            </colgroup>
-            <tbody className="[&_td]:text-center">
-              {courses &&
-                (courses.length === 0 ? (
-                  <tr className="text-md !h-100 bg-white">
-                    <td colSpan={10}>
-                      <div className="flex h-full w-full flex-col items-center justify-center">
-                        <div className="mb-2 h-auto w-25">
-                          <Image src={SangSangBoogi} alt="상상부기" />
-                        </div>
-                        검색 결과가 없습니다
-                      </div>
-                    </td>
-                  </tr>
-                ) : (
-                  courses.map((course) => (
-                    <CourseInfoTableRow
-                      key={course.id}
-                      course={course}
-                      setHoveredCourse={setHoveredCourse}
-                      clearHoveredCourse={clearHoveredCourse}
-                      onClickCourse={onClickCourse}
-                    />
-                  ))
-                ))}
-            </tbody>
-          </table>
+          courses &&
+          (courses.length === 0 ? (
+            <div className="text-md flex h-100 w-full flex-col items-center justify-center bg-white">
+              <div className="mb-2 h-auto w-25">
+                <Image src={SangSangBoogi} alt="상상부기" />
+              </div>
+              검색 결과가 없습니다
+            </div>
+          ) : (
+            visibleCourses?.map((course) => (
+              <CourseInfoTableRow
+                key={course.id}
+                course={course}
+                setHoveredCourse={setHoveredCourse}
+                clearHoveredCourse={clearHoveredCourse}
+                onClickCourse={onClickCourse}
+              />
+            ))
+          ))
         )}
-        {footer}
       </div>
     </div>
   );
