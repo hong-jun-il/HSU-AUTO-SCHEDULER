@@ -68,10 +68,7 @@ export default function CourseTab() {
     selected_courses,
   ]);
 
-  const { data, isLoading, hasNextPage, fetchNextPage } =
-    useGetCourses(filters);
-
-  const courses = data?.pages;
+  const { data: courses, isLoading } = useGetCourses(filters);
 
   const hasEnoughData = useMemo(() => {
     if (!courses) return false;
@@ -92,12 +89,7 @@ export default function CourseTab() {
         search={search}
         setSearch={setSearch}
       />
-      <CourseListContainer
-        hasNextPage={hasNextPage}
-        fetchNextPage={fetchNextPage}
-        isLoading={isLoading}
-        courses={data?.pages}
-      />
+      <CourseListContainer isLoading={isLoading} courses={courses} />
     </div>
   );
 }
