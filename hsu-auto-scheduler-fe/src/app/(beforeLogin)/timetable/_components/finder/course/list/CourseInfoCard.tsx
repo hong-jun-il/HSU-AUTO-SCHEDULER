@@ -29,6 +29,9 @@ export default function CourseInfoCard({
         "flex flex-col gap-5",
         "rounded-lg px-10 py-8",
         "cursor-pointer",
+        // 강의를 한 번에 전부 그리므로, 화면 밖 카드는 브라우저가 레이아웃·그리기를 건너뛰게 한다.
+        // 136px 은 그리기 전 자리값(카드 평균 높이). 한 번 그려지면 실제 높이를 기억한다
+        "[content-visibility:auto] [contain-intrinsic-size:auto_136px]",
         hoveredCourse && hoveredCourse.id === course.id
           ? "bg-hsu/20"
           : "bg-linear-[135deg,var(--color-light-hsu)_0%,#fff_100%]",
