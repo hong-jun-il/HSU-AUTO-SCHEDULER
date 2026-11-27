@@ -112,8 +112,8 @@ export class ScheduleService {
       10. 점심 시간(12:00 ~ 13:00)
   */
   async getCourses(
-    currentPage: number,
-    pagePerLimit: number,
+    currentPage: number | undefined,
+    pagePerLimit: number | undefined,
     filters: FilterDto,
   ) {
     const {
@@ -256,11 +256,16 @@ export class ScheduleService {
       });
     }
 
-    const paginationStart = (currentPage - 1) * pagePerLimit;
-    const paginationEnd = paginationStart + pagePerLimit;
+    // 페이지를 지정하지 않으면 전부 돌려준다. 한 학기 전체도 약 1,500개(gzip 약 60KB)라 나눌 필요가 없다
+    const isPaginated = currentPage !== undefined && pagePerLimit !== undefined;
+    const pageOfResult = isPaginated
+      ? result.slice(
+          (currentPage - 1) * pagePerLimit,
+          currentPage * pagePerLimit,
+        )
+      : result;
 
-    const data: CourseViewDto[] = result
-      .slice(paginationStart, paginationEnd)
+    const data: CourseViewDto[] = pageOfResult
       .map((lecture) => {
         return {
           id: lecture.id,
